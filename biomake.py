@@ -4,7 +4,10 @@ import yeadon
 
 
 O = np.zeros(3)
-Id = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+_1_ = np.identity(3)
+
+def parallel_axis_theorem(I0: np.array[np.float, np.float], R: np.array[np.float], m: float):
+    return I0 + m * (R @ R * _1_ - R @ R.T)  # danke Wikipedia [https://en.wikipedia.org/wiki/Parallel_axis_theorem]
 
 
 class BioModSegment:
@@ -107,7 +110,7 @@ class Thorax(BioModSegment):
         segment = yeadon.segment.Segment(
             '',
             O,
-            Id,
+            _1_,
             human.T.solids + human.C.solids[:2],  # nipple, shoulder, acromion
             O
         )
@@ -147,9 +150,8 @@ class Head(BioModSegment):
         translations = ''
 
         segment = yeadon.segment.Segment(
-            '',
-            O,
-            Id,
+            '', O,
+            _1_,
             human.C.solids[2:],  # beneath nose, top of ear, top of head
             O
         )
@@ -513,3 +515,118 @@ class RightShankAndFoot(BioModSegment):
     def get_origin(human: yeadon.Human) -> np.array:
         """Get the origin of the RightShankAndFoot in the global frame centered at Pelvis' COM."""
         return human.K2.pos.reshape(3) - human.P.center_of_mass.reshape(3)
+
+
+class Tighs(BioModSegment):
+    """The tighs of a human if they must remain together."""
+
+    def __init__(
+        self,
+        human: yeadon.Human,
+        rotations: str = 'xy',
+        is_symetric: bool = False
+    ):
+        label = 'Tighs'
+        parent = 'Pelvis'
+        rt = O
+        xyz = Tighs.get_origin(human) - Pelvis.get_origin(human)
+        translations = ''
+
+        mass = human.J1.mass + human.K1.mass
+
+        com_global = (
+                (human.J1.mass * human.J1.center_of_mass + human.K1.mass * human.K1.center_of_mass) / mass
+        ).reshape(3)
+        if is_symetric:  # then center the COM of the tighs
+            com_global[:2] = 0.
+        com = com_global - xyz
+
+        inertia = parallel_axis_theorem(0, human.J1.center_of_mass-com_global, human.J1.mass) \
+                    + parallel_axis_theorem(0, human.K1.center_of_mass-com_global, human.K1.mass)
+
+        BioModSegment.__init__(
+            self,
+            label,
+            parent,
+            rt,
+            xyz,
+            translations,
+            rotations,
+            com,
+            mass,
+            inertia
+        )
+        self.is_symetric = is_symetric
+
+    @staticmethod
+    def get_origin(human: yeadon.Human) -> np.array:
+        """Get the origin of the Tighs in the global frame centered at Pelvis' COM."""
+        return human.P.pos.reshape(3) - human.P.center_of_mass.reshape(3)
+
+
+class ShanksAndFeet(BioModSegment):
+    """The shanks and feet of a human if they must remain together."""
+
+    def __init__(
+        self,
+        human: yeadon.Human,
+        rotations: str = 'xy',
+        is_symetric: bool = False
+    ):
+        label = 'ShankAndFeet'
+        parent = 'Tighs'
+        rt = O
+        xyz = LeftShankAndFoot.get_origin(human) - Tighs.get_origin(human)
+        translations = ''
+
+        mass = human.J2.mass + human.K2.mass
+
+        com_global = (
+                (human.J2.mass * human.J2.center_of_mass + human.K2.mass * human.K2.center_of_mass) / mass
+        ).reshape(3)
+        if is_symetric:  # then center the COM of the tighs
+            com_global[:2] = 0.
+        com = com_global - xyz
+
+        inertia = parallel_axis_theorem(0, human.J2.center_of_mass-com_global, human.J2.mass) \
+                    + parallel_axis_theorem(0, human.K2.center_of_mass-com_global, human.K2.mass)
+
+        BioModSegment.__init__(
+            self,
+            label,
+            parent,
+            rt,
+            xyz,
+            translations,
+            rotations,
+            com,
+            mass,
+            inertia
+        )
+        self.is_symetric = is_symetric
+
+    @staticmethod
+    def get_origin(human: yeadon.Human) -> np.array:
+        """Get the origin of the ShanksAndFeet in the global frame centered at Pelvis' COM."""
+        return (human.J1.pos + human.K1.pos).reshape(3) / 2. - human.P.center_of_mass.reshape(3)
+
+
+class BioModHuman:
+
+    def __init__(self, human: yeadon.Human):
+        self.head = Head(human)
+        self.thorax = Thorax(human)
+        self.pelvis = Pelvis(human)
+        self.right_shoulder = RightShoulder(human)
+        self.right_upper_arm = RightUpperArm(human)
+        self.right_forearm_hand = RightForearmAndHand
+        self.left_shoulder = LeftShoulder(human)
+        self.left_upper_arm = LeftUpperArm(human)
+        self.left_forearm_hand = LeftForearmAndHand(human)
+        self.right_thigh = RightThigh(human)
+        self.right_shank_foot = RightShankAndFoot(human)
+        self.left_thigh = LeftThigh(human)
+        self.left_shank_foot = LeftShankAndFoot(human)
+
+    def __str__(self):
+        return "TODO"

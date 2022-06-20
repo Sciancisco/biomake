@@ -42,30 +42,31 @@ class BioModSegment:
         self.mass = mass
         self.inertia = inertia
 
-        def __str__(self):
-            mod = f"segment {self.label}\n"
-            mod += f"\tparent {self.parent}\n"
-            mod += f"\trt {BioModSegment.format_vec(self.rt)} xyz {BioModSegment.format_vec(self.xyz)}\n"
-            if self.translations:
-                self.translations += f"\ttranslations {self.translations}\n"
-            if self.rotations:
-                self.rotations += f"\trotations {self.rotations}\n"
-            mod += f"\tcom {BioModSegment.format_vec(self.com)}\n"
-            mod += f"\tmass {self.mass}\n"
-            mod += f"\tinertia\n" + BioModSegment.format_mat(self.inertia, leading="\t\t") + "\n"
-            mod += "endsegment\n"
+    def __str__(self):
+        mod = f"segment {self.label}\n"
+        mod += f"\tparent {self.parent}\n"
+        mod += f"\trt {BioModSegment.format_vec(self.rt)} xyz {BioModSegment.format_vec(self.xyz)}\n"
+        if self.translations:
+            self.translations += f"\ttranslations {self.translations}\n"
+        if self.rotations:
+            self.rotations += f"\trotations {self.rotations}\n"
+        mod += f"\tcom {BioModSegment.format_vec(self.com)}\n"
+        mod += f"\tmass {self.mass}\n"
+        mod += f"\tinertia\n" + BioModSegment.format_mat(self.inertia, leading="\t\t") + "\n"
+        mod += f"\tmesh 0 0 0\n"
+        mod += "endsegment"
 
-            return mod
+        return mod
 
     @staticmethod
-    def format_vec(vec):
+    def format_vec(vec: Vec3):
         return f"{vec[0]} {vec[1]} {vec[2]}"
 
     @staticmethod
-    def format_mat(mat, leading=""):
-        return f"{leading}{mat[0]} {mat[1]} {mat[2]}\n" \
-               f"{leading}{mat[3]} {mat[4]} {mat[5]}\n" \
-               f"{leading}{mat[6]} {mat[7]} {mat[8]}"
+    def format_mat(mat: Mat3x3, leading=""):
+        return f"{leading}{mat[0, 0]} {mat[0, 1]} {mat[0, 2]}\n" \
+               f"{leading}{mat[1, 0]} {mat[1, 1]} {mat[1, 2]}\n" \
+               f"{leading}{mat[2, 0]} {mat[2, 1]} {mat[2, 2]}"
 
 
 class Pelvis(BioModSegment):
@@ -117,12 +118,12 @@ class Thorax(BioModSegment):
 
         segment = yeadon.segment.Segment(
             '',
-            O,
+            O.reshape(3, 1),
             _1_,
             human.T.solids + human.C.solids[:2],  # nipple, shoulder, acromion
             O
         )
-        com = segment.rel_center_of_mass.reshape(3)
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
         mass = segment.mass
         inertia = segment.rel_inertia
         BioModSegment.__init__(
@@ -141,7 +142,7 @@ class Thorax(BioModSegment):
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the Thorax in the global frame centered at Pelvis' COM."""
-        return human.T.pos.reshape(3) - human.P.center_of_mass.reshape(3)
+        return np.asarray(human.T.pos - human.P.center_of_mass).reshape(3)
 
 
 class Head(BioModSegment):
@@ -159,12 +160,12 @@ class Head(BioModSegment):
 
         segment = yeadon.segment.Segment(
             '',
-            O,
+            O.reshape(3, 1),
             _1_,
             human.C.solids[2:],  # beneath nose, top of ear, top of head
             O
         )
-        com = segment.rel_center_of_mass.reshape(3)
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
         mass = segment.mass
         inertia = segment.rel_inertia
         BioModSegment.__init__(
@@ -183,7 +184,7 @@ class Head(BioModSegment):
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the Head in the global frame centered at Pelvis' COM."""
-        return human.C.solids[2].pos.reshape(3) - human.P.center_of_mass.reshape(3)
+        return np.asarray(human.C.solids[2].pos - human.P.center_of_mass).reshape(3)
 
 
 class LeftShoulder(BioModSegment):
@@ -198,7 +199,7 @@ class LeftShoulder(BioModSegment):
         rt = O
         xyz = LeftShoulder.get_origin(human) - Thorax.get_origin(human)
         translations = ''
-        com = human.A1.solids[0].rel_center_of_mass.reshape(3)
+        com = np.asarray(human.A1.solids[0].rel_center_of_mass).reshape(3)
         mass = human.A1.solids[0].mass
         inertia = human.A1.solids[0].rel_inertia
         BioModSegment.__init__(
@@ -217,7 +218,7 @@ class LeftShoulder(BioModSegment):
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the LeftShoulder in the global frame centered at Pelvis' COM."""
-        return human.A1.solids[0].pos.reshape(3) - human.P.center_of_mass.reshape(3)
+        return np.asarray(human.A1.solids[0].pos - human.P.center_of_mass).reshape(3)
 
 
 class LeftUpperArm(BioModSegment):
@@ -232,7 +233,7 @@ class LeftUpperArm(BioModSegment):
         rt = O
         xyz = LeftUpperArm.get_origin(human) - Thorax.get_origin(human)
         translations = ''
-        com = human.A1.solids[1].rel_center_of_mass.reshape(3)
+        com = np.asarray(human.A1.solids[1].rel_center_of_mass).reshape(3)
         mass = human.A1.solids[1].mass
         inertia = human.A1.solids[1].rel_inertia
         BioModSegment.__init__(
@@ -251,7 +252,7 @@ class LeftUpperArm(BioModSegment):
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the LeftUpperArm in the global frame centered at Pelvis' COM."""
-        return human.A1.solids[1].pos.reshape(3) - human.P.center_of_mass.reshape(3)
+        return np.asarray(human.A1.solids[1].pos - human.P.center_of_mass).reshape(3)
 
 
 class LeftForearmAndHand(BioModSegment):
@@ -266,7 +267,7 @@ class LeftForearmAndHand(BioModSegment):
         rt = O
         xyz = LeftForearmAndHand.get_origin(human) - LeftUpperArm.get_origin(human)
         translations = ''
-        com = human.A2.rel_center_of_mass.reshape(3)
+        com = np.asarray(human.A2.rel_center_of_mass).reshape(3)
         mass = human.A2.mass
         inertia = human.A2.rel_inertia
         BioModSegment.__init__(
@@ -285,7 +286,7 @@ class LeftForearmAndHand(BioModSegment):
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the LeftForearmAndHand in the global frame centered at Pelvis' COM."""
-        return human.A2.pos.reshape(3) - human.P.center_of_mass.reshape(3)
+        return np.asarray(human.A2.pos - human.P.center_of_mass).reshape(3)
 
 
 class RightShoulder(BioModSegment):
@@ -300,7 +301,7 @@ class RightShoulder(BioModSegment):
         rt = O
         xyz = RightShoulder.get_origin(human) - Thorax.get_origin(human)
         translations = ''
-        com = human.B1.solids[0].rel_center_of_mass.reshape(3)
+        com = np.asarray(human.B1.solids[0].rel_center_of_mass).reshape(3)
         mass = human.B1.solids[0].mass
         inertia = human.B1.solids[0].rel_inertia
         BioModSegment.__init__(
@@ -319,7 +320,7 @@ class RightShoulder(BioModSegment):
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the RightShoulder in the global frame centered at Pelvis' COM."""
-        return human.B1.solids[0].pos.reshape(3) - human.P.center_of_mass.reshape(3)
+        return np.asarray(human.B1.solids[0].pos - human.P.center_of_mass).reshape(3)
 
 
 class RightUpperArm(BioModSegment):
@@ -334,7 +335,7 @@ class RightUpperArm(BioModSegment):
         rt = O
         xyz = RightUpperArm.get_origin(human) - Thorax.get_origin(human)
         translations = ''
-        com = human.B1.solids[1].rel_center_of_mass.reshape(3)
+        com = np.asarray(human.B1.solids[1].rel_center_of_mass).reshape(3)
         mass = human.B1.solids[1].mass
         inertia = human.B1.solids[1].rel_inertia
         BioModSegment.__init__(
@@ -353,7 +354,7 @@ class RightUpperArm(BioModSegment):
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the RightUpperArm in the global frame centered at Pelvis' COM."""
-        return human.B1.solids[1].pos.reshape(3) - human.P.center_of_mass.reshape(3)
+        return np.asarray(human.B1.solids[1].pos - human.P.center_of_mass).reshape(3)
 
 
 class RightForearmAndHand(BioModSegment):
@@ -368,7 +369,7 @@ class RightForearmAndHand(BioModSegment):
         rt = O
         xyz = RightForearmAndHand.get_origin(human) - RightUpperArm.get_origin(human)
         translations = ''
-        com = human.B2.rel_center_of_mass.reshape(3)
+        com = np.asarray(human.B2.rel_center_of_mass).reshape(3)
         mass = human.B2.mass
         inertia = human.B2.rel_inertia
         BioModSegment.__init__(
@@ -387,7 +388,7 @@ class RightForearmAndHand(BioModSegment):
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the RightForearmAndHand in the global frame centered at Pelvis' COM."""
-        return human.B2.pos.reshape(3) - human.P.center_of_mass.reshape(3)
+        return np.asarray(human.B2.pos - human.P.center_of_mass).reshape(3)
 
 
 class LeftThigh(BioModSegment):
@@ -402,7 +403,7 @@ class LeftThigh(BioModSegment):
         rt = O
         xyz = LeftThigh.get_origin(human) - Pelvis.get_origin(human)
         translations = ''
-        com = human.J1.rel_center_of_mass.repshape(3)
+        com = np.asarray(human.J1.rel_center_of_mass).reshape(3)
         mass = human.J1.mass
         inertia = human.J1.rel_inertia
         BioModSegment.__init__(
@@ -421,7 +422,7 @@ class LeftThigh(BioModSegment):
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the LeftTigh in the global frame centered at Pelvis' COM."""
-        return human.J1.pos.reshape(3) - human.P.center_of_mass.reshape(3)
+        return np.asarray(human.J1.pos - human.P.center_of_mass).reshape(3)
 
 
 class LeftShankAndFoot(BioModSegment):
@@ -436,7 +437,7 @@ class LeftShankAndFoot(BioModSegment):
         rt = O
         xyz = LeftShankAndFoot.get_origin(human) - LeftThigh.get_origin(human)
         translations = ''
-        com = human.J2.rel_center_of_mass.reshape(3)
+        com = np.asarray(human.J2.rel_center_of_mass).reshape(3)
         mass = human.J2.mass
         inertia = human.J2.rel_inertia
         BioModSegment.__init__(
@@ -455,7 +456,7 @@ class LeftShankAndFoot(BioModSegment):
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the LeftShankAndFoot in the global frame centered at Pelvis' COM."""
-        return human.J2.pos.reshape(3) - human.P.center_of_mass.reshape(3)
+        return np.asarray(human.J2.pos - human.P.center_of_mass).reshape(3)
 
 
 class RightThigh(BioModSegment):
@@ -470,7 +471,7 @@ class RightThigh(BioModSegment):
         rt = O
         xyz = RightThigh.get_origin(human) - Pelvis.get_origin(human)
         translations = ''
-        com = human.K1.rel_center_of_mass.repshape(3)
+        com = np.asarray(human.K1.rel_center_of_mass).reshape(3)
         mass = human.K1.mass
         inertia = human.K1.rel_inertia
         BioModSegment.__init__(
@@ -489,7 +490,7 @@ class RightThigh(BioModSegment):
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the RightTigh in the global frame centered at Pelvis' COM."""
-        return human.K1.pos.reshape(3) - human.P.center_of_mass.reshape(3)
+        return np.asarray(human.K1.pos - human.P.center_of_mass).reshape(3)
 
 
 class RightShankAndFoot(BioModSegment):
@@ -504,7 +505,7 @@ class RightShankAndFoot(BioModSegment):
         rt = O
         xyz = RightShankAndFoot.get_origin(human) - RightThigh.get_origin(human)
         translations = ''
-        com = human.K2.rel_center_of_mass.reshape(3)
+        com = np.asarray(human.K2.rel_center_of_mass).reshape(3)
         mass = human.K2.mass
         inertia = human.K2.rel_inertia
         BioModSegment.__init__(
@@ -523,7 +524,7 @@ class RightShankAndFoot(BioModSegment):
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the RightShankAndFoot in the global frame centered at Pelvis' COM."""
-        return human.K2.pos.reshape(3) - human.P.center_of_mass.reshape(3)
+        return np.asarray(human.K2.pos - human.P.center_of_mass).reshape(3)
 
 
 class Tighs(BioModSegment):
@@ -543,7 +544,7 @@ class Tighs(BioModSegment):
 
         mass = human.J1.mass + human.K1.mass
 
-        com_global = (
+        com_global = np.asarray(
                 (human.J1.mass * human.J1.center_of_mass + human.K1.mass * human.K1.center_of_mass) / mass
         ).reshape(3)
         if is_symetric:  # then center the COM of the tighs
@@ -570,7 +571,7 @@ class Tighs(BioModSegment):
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the Tighs in the global frame centered at Pelvis' COM."""
-        return human.P.pos.reshape(3) - human.P.center_of_mass.reshape(3)
+        return np.asarray(human.P.pos - human.P.center_of_mass).reshape(3)
 
 
 class ShanksAndFeet(BioModSegment):
@@ -590,7 +591,7 @@ class ShanksAndFeet(BioModSegment):
 
         mass = human.J2.mass + human.K2.mass
 
-        com_global = (
+        com_global = np.asarray(
                 (human.J2.mass * human.J2.center_of_mass + human.K2.mass * human.K2.center_of_mass) / mass
         ).reshape(3)
         if is_symetric:  # then center the COM of the tighs
@@ -617,7 +618,7 @@ class ShanksAndFeet(BioModSegment):
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the ShanksAndFeet in the global frame centered at Pelvis' COM."""
-        return (human.J1.pos + human.K1.pos).reshape(3) / 2. - human.P.center_of_mass.reshape(3)
+        return np.asarray((human.J1.pos + human.K1.pos) / 2. - human.P.center_of_mass).reshape(3)
 
 
 class BioModHuman:
@@ -628,7 +629,7 @@ class BioModHuman:
         self.pelvis = Pelvis(human)
         self.right_shoulder = RightShoulder(human)
         self.right_upper_arm = RightUpperArm(human)
-        self.right_forearm_hand = RightForearmAndHand
+        self.right_forearm_hand = RightForearmAndHand(human)
         self.left_shoulder = LeftShoulder(human)
         self.left_upper_arm = LeftUpperArm(human)
         self.left_forearm_hand = LeftForearmAndHand(human)
@@ -638,4 +639,27 @@ class BioModHuman:
         self.left_shank_foot = LeftShankAndFoot(human)
 
     def __str__(self):
-        return "TODO"
+        biomod = "version 4\n\nroot_actuated 0\nexternal_forces 0\n\n"
+        biomod += f"{self.pelvis}\n\n"
+        biomod += f"{self.thorax}\n\n"
+        biomod += f"{self.head}\n\n"
+        biomod += f"{self.right_shoulder}\n\n"
+        biomod += f"{self.right_upper_arm}\n\n"
+        biomod += f"{self.right_forearm_hand}\n\n"
+        biomod += f"{self.left_shoulder}\n\n"
+        biomod += f"{self.left_upper_arm}\n\n"
+        biomod += f"{self.left_forearm_hand}\n\n"
+        biomod += f"{self.right_thigh}\n\n"
+        biomod += f"{self.right_shank_foot}\n\n"
+        biomod += f"{self.left_thigh}\n\n"
+        biomod += f"{self.left_shank_foot}\n"
+
+        return biomod
+
+
+if __name__ == '__main__':
+    import sys
+    measurements = sys.argv[1]
+    human = yeadon.Human(measurements)
+    biohuman = BioModHuman(human)
+    print(biohuman)

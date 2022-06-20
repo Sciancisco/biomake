@@ -1,12 +1,20 @@
+from typing import Annotated, Literal, TypeVar
+import numpy.typing as npt
 
 import numpy as np
 import yeadon
 
 
+# From [https://stackoverflow.com/questions/71109838/numpy-typing-with-specific-shape-and-datatype]
+DType = TypeVar("DType", bound=np.generic)
+Vec3 = Annotated[npt.NDArray[DType], Literal[3]]
+Mat3x3 = Annotated[npt.NDArray[DType], Literal[3, 3]]
+
 O = np.zeros(3)
 _1_ = np.identity(3)
 
-def parallel_axis_theorem(I0: np.array[np.float, np.float], R: np.array[np.float], m: float):
+
+def parallel_axis_theorem(I0: Mat3x3, R: Vec3, m: float) -> Vec3:
     return I0 + m * (R @ R * _1_ - R @ R.T)  # danke Wikipedia [https://en.wikipedia.org/wiki/Parallel_axis_theorem]
 
 
@@ -16,13 +24,13 @@ class BioModSegment:
         self,
         label: str,
         parent: str,
-        rt: np.array,
-        xyz: np.array,
+        rt: Vec3,
+        xyz: Vec3,
         translations: str,
         rotations: str,
-        com: np.array,
+        com: Vec3,
         mass: float,
-        inertia: np.array
+        inertia: Mat3x3
     ):
         self.label = label
         self.parent = parent
@@ -89,7 +97,7 @@ class Pelvis(BioModSegment):
         )
 
     @staticmethod
-    def get_origin(human: yeadon.Human) -> np.array:
+    def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the Pelvis in the global frame centered at Pelvis' COM."""
         return O
 
@@ -131,7 +139,7 @@ class Thorax(BioModSegment):
         )
 
     @staticmethod
-    def get_origin(human: yeadon.Human) -> np.array:
+    def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the Thorax in the global frame centered at Pelvis' COM."""
         return human.T.pos.reshape(3) - human.P.center_of_mass.reshape(3)
 
@@ -150,7 +158,8 @@ class Head(BioModSegment):
         translations = ''
 
         segment = yeadon.segment.Segment(
-            '', O,
+            '',
+            O,
             _1_,
             human.C.solids[2:],  # beneath nose, top of ear, top of head
             O
@@ -172,7 +181,7 @@ class Head(BioModSegment):
         )
 
     @staticmethod
-    def get_origin(human: yeadon.Human) -> np.array:
+    def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the Head in the global frame centered at Pelvis' COM."""
         return human.C.solids[2].pos.reshape(3) - human.P.center_of_mass.reshape(3)
 
@@ -206,7 +215,7 @@ class LeftShoulder(BioModSegment):
         )
 
     @staticmethod
-    def get_origin(human: yeadon.Human) -> np.array:
+    def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the LeftShoulder in the global frame centered at Pelvis' COM."""
         return human.A1.solids[0].pos.reshape(3) - human.P.center_of_mass.reshape(3)
 
@@ -240,7 +249,7 @@ class LeftUpperArm(BioModSegment):
         )
 
     @staticmethod
-    def get_origin(human: yeadon.Human) -> np.array:
+    def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the LeftUpperArm in the global frame centered at Pelvis' COM."""
         return human.A1.solids[1].pos.reshape(3) - human.P.center_of_mass.reshape(3)
 
@@ -274,7 +283,7 @@ class LeftForearmAndHand(BioModSegment):
         )
 
     @staticmethod
-    def get_origin(human: yeadon.Human) -> np.array:
+    def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the LeftForearmAndHand in the global frame centered at Pelvis' COM."""
         return human.A2.pos.reshape(3) - human.P.center_of_mass.reshape(3)
 
@@ -308,7 +317,7 @@ class RightShoulder(BioModSegment):
         )
 
     @staticmethod
-    def get_origin(human: yeadon.Human) -> np.array:
+    def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the RightShoulder in the global frame centered at Pelvis' COM."""
         return human.B1.solids[0].pos.reshape(3) - human.P.center_of_mass.reshape(3)
 
@@ -342,7 +351,7 @@ class RightUpperArm(BioModSegment):
         )
 
     @staticmethod
-    def get_origin(human: yeadon.Human) -> np.array:
+    def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the RightUpperArm in the global frame centered at Pelvis' COM."""
         return human.B1.solids[1].pos.reshape(3) - human.P.center_of_mass.reshape(3)
 
@@ -376,7 +385,7 @@ class RightForearmAndHand(BioModSegment):
         )
 
     @staticmethod
-    def get_origin(human: yeadon.Human) -> np.array:
+    def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the RightForearmAndHand in the global frame centered at Pelvis' COM."""
         return human.B2.pos.reshape(3) - human.P.center_of_mass.reshape(3)
 
@@ -410,7 +419,7 @@ class LeftThigh(BioModSegment):
         )
 
     @staticmethod
-    def get_origin(human: yeadon.Human) -> np.array:
+    def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the LeftTigh in the global frame centered at Pelvis' COM."""
         return human.J1.pos.reshape(3) - human.P.center_of_mass.reshape(3)
 
@@ -444,7 +453,7 @@ class LeftShankAndFoot(BioModSegment):
         )
 
     @staticmethod
-    def get_origin(human: yeadon.Human) -> np.array:
+    def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the LeftShankAndFoot in the global frame centered at Pelvis' COM."""
         return human.J2.pos.reshape(3) - human.P.center_of_mass.reshape(3)
 
@@ -478,7 +487,7 @@ class RightThigh(BioModSegment):
         )
 
     @staticmethod
-    def get_origin(human: yeadon.Human) -> np.array:
+    def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the RightTigh in the global frame centered at Pelvis' COM."""
         return human.K1.pos.reshape(3) - human.P.center_of_mass.reshape(3)
 
@@ -512,7 +521,7 @@ class RightShankAndFoot(BioModSegment):
         )
 
     @staticmethod
-    def get_origin(human: yeadon.Human) -> np.array:
+    def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the RightShankAndFoot in the global frame centered at Pelvis' COM."""
         return human.K2.pos.reshape(3) - human.P.center_of_mass.reshape(3)
 
@@ -559,7 +568,7 @@ class Tighs(BioModSegment):
         self.is_symetric = is_symetric
 
     @staticmethod
-    def get_origin(human: yeadon.Human) -> np.array:
+    def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the Tighs in the global frame centered at Pelvis' COM."""
         return human.P.pos.reshape(3) - human.P.center_of_mass.reshape(3)
 
@@ -606,7 +615,7 @@ class ShanksAndFeet(BioModSegment):
         self.is_symetric = is_symetric
 
     @staticmethod
-    def get_origin(human: yeadon.Human) -> np.array:
+    def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the ShanksAndFeet in the global frame centered at Pelvis' COM."""
         return (human.J1.pos + human.K1.pos).reshape(3) / 2. - human.P.center_of_mass.reshape(3)
 

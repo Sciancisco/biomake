@@ -185,7 +185,11 @@ class Head(BioModSegment):
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the Head in the global frame centered at Pelvis' COM."""
-        return np.asarray(human.C.solids[2].pos - human.P.center_of_mass).reshape(3)
+        length = human.C.solids[0].height + human.C.solids[1].height
+        dir = human.C.end_pos - human.C.pos
+        dir = dir / np.linalg.norm(dir)
+        pos = human.C.pos + length * dir
+        return np.asarray(pos - human.P.center_of_mass).reshape(3)
 
 
 class LeftUpperArm(BioModSegment):
@@ -222,21 +226,30 @@ class LeftUpperArm(BioModSegment):
         return np.asarray(human.A1.pos - human.P.center_of_mass).reshape(3)
 
 
-class LeftForearmAndHand(BioModSegment):
+class LeftForearm(BioModSegment):
 
     def __init__(
         self,
         human: yeadon.Human,
         rotations: str = 'zy'
     ):
-        label = 'LeftForeArmAndHand'
+        label = 'LeftForearm'
         parent = 'LeftUpperArm'
         rt = O
-        xyz = LeftForearmAndHand.get_origin(human) - LeftUpperArm.get_origin(human)
+        xyz = LeftForearm.get_origin(human) - LeftUpperArm.get_origin(human)
         translations = ''
-        com = np.asarray(human.A2.rel_center_of_mass).reshape(3)
-        mass = human.A2.mass
-        inertia = human.A2.rel_inertia
+
+        segment = yeadon.segment.Segment(
+            label='',
+            pos=O.reshape(3, 1),
+            rot_mat=_1_,
+            solids=human.A2.solids[:2],  # max perimeter forearm, wrist
+            color=O,
+            build_toward_positive_z=False
+        )
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
+        mass = segment.mass
+        inertia = segment.rel_inertia
         BioModSegment.__init__(
             self,
             label,
@@ -252,8 +265,51 @@ class LeftForearmAndHand(BioModSegment):
 
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
-        """Get the origin of the LeftForearmAndHand in the global frame centered at Pelvis' COM."""
+        """Get the origin of the LeftForearm in the global frame centered at Pelvis' COM."""
         return np.asarray(human.A2.pos - human.P.center_of_mass).reshape(3)
+
+
+class LeftHand(BioModSegment):
+
+    def __init__(self, human: yeadon.Human, rotations: str = ''):
+        label = 'LeftHand'
+        parent = 'LeftForearm'
+        rt = O
+        xyz = LeftHand.get_origin(human) - LeftForearm.get_origin(human)
+        translations = ''
+
+        segment = yeadon.segment.Segment(
+            label='',
+            pos=O.reshape(3,1),
+            rot_mat=_1_,
+            solids=human.A2.solids[2:],
+            color=O,
+            build_toward_positive_z=False
+        )
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
+        mass = segment.mass
+        inertia = segment.rel_inertia
+        BioModSegment.__init__(
+            self,
+            label,
+            parent,
+            rt,
+            xyz,
+            translations,
+            rotations,
+            com,
+            mass,
+            inertia
+        )
+
+    @staticmethod
+    def get_origin(human: yeadon.Human):
+        """Get the origin of the LeftHand in the global frame centered at Pelvis' COM."""
+        length = human.A2.solids[0].height + human.A2.solids[1].height
+        dir = human.A2.end_pos - human.A2.pos
+        dir = dir / np.linalg.norm(dir)
+        pos = human.A2.pos + length * dir
+        return np.asarray(pos - human.P.center_of_mass).reshape(3)
 
 
 class RightUpperArm(BioModSegment):
@@ -290,21 +346,30 @@ class RightUpperArm(BioModSegment):
         return np.asarray(human.B1.pos - human.P.center_of_mass).reshape(3)
 
 
-class RightForearmAndHand(BioModSegment):
+class RightForearm(BioModSegment):
 
     def __init__(
         self,
         human: yeadon.Human,
         rotations: str = 'zy'
     ):
-        label = 'RightForeArmAndHand'
+        label = 'RightForearm'
         parent = 'RightUpperArm'
         rt = O
-        xyz = RightForearmAndHand.get_origin(human) - RightUpperArm.get_origin(human)
+        xyz = RightForearm.get_origin(human) - RightUpperArm.get_origin(human)
         translations = ''
-        com = np.asarray(human.B2.rel_center_of_mass).reshape(3)
-        mass = human.B2.mass
-        inertia = human.B2.rel_inertia
+
+        segment = yeadon.segment.Segment(
+            label='',
+            pos=O.reshape(3, 1),
+            rot_mat=_1_,
+            solids=human.B2.solids[:2],  # max perimeter forearm, wrist
+            color=O,
+            build_toward_positive_z=False
+        )
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
+        mass = segment.mass
+        inertia = segment.rel_inertia
         BioModSegment.__init__(
             self,
             label,
@@ -320,8 +385,51 @@ class RightForearmAndHand(BioModSegment):
 
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
-        """Get the origin of the RightForearmAndHand in the global frame centered at Pelvis' COM."""
+        """Get the origin of the RightForearm in the global frame centered at Pelvis' COM."""
         return np.asarray(human.B2.pos - human.P.center_of_mass).reshape(3)
+
+
+class RightHand(BioModSegment):
+
+    def __init__(self, human: yeadon.Human, rotations: str = ''):
+        label = 'RightHand'
+        parent = 'RightForearm'
+        rt = O
+        xyz = RightHand.get_origin(human) - RightForearm.get_origin(human)
+        translations = ''
+
+        segment = yeadon.segment.Segment(
+            label='',
+            pos=O.reshape(3,1),
+            rot_mat=_1_,
+            solids=human.B2.solids[2:],
+            color=O,
+            build_toward_positive_z=False
+        )
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
+        mass = segment.mass
+        inertia = segment.rel_inertia
+        BioModSegment.__init__(
+            self,
+            label,
+            parent,
+            rt,
+            xyz,
+            translations,
+            rotations,
+            com,
+            mass,
+            inertia
+        )
+
+    @staticmethod
+    def get_origin(human: yeadon.Human):
+        """Get the origin of the RightHand in the global frame centered at Pelvis' COM."""
+        length = human.B2.solids[0].height + human.B2.solids[1].height
+        dir = human.B2.end_pos - human.B2.pos
+        dir = dir / np.linalg.norm(dir)
+        pos = human.B2.pos + length * dir
+        return np.asarray(pos - human.P.center_of_mass).reshape(3)
 
 
 class LeftThigh(BioModSegment):
@@ -358,21 +466,30 @@ class LeftThigh(BioModSegment):
         return np.asarray(human.J1.pos - human.P.center_of_mass).reshape(3)
 
 
-class LeftShankAndFoot(BioModSegment):
+class LeftShank(BioModSegment):
 
     def __init__(
         self,
         human: yeadon.Human,
         rotations: str = ''
     ):
-        label = 'LeftShankAndFoot'
+        label = 'LeftShank'
         parent = 'LeftTigh'
         rt = O
-        xyz = LeftShankAndFoot.get_origin(human) - LeftThigh.get_origin(human)
+        xyz = LeftShank.get_origin(human) - LeftThigh.get_origin(human)
         translations = ''
-        com = np.asarray(human.J2.rel_center_of_mass).reshape(3)
-        mass = human.J2.mass
-        inertia = human.J2.rel_inertia
+
+        segment = yeadon.segment.Segment(
+            label='',
+            pos=O.reshape(3,1),
+            rot_mat=_1_,
+            solids=human.J2.solids[:2],
+            color=O,
+            build_toward_positive_z=False
+        )
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
+        mass = segment.mass
+        inertia = segment.rel_inertia
         BioModSegment.__init__(
             self,
             label,
@@ -388,8 +505,51 @@ class LeftShankAndFoot(BioModSegment):
 
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
-        """Get the origin of the LeftShankAndFoot in the global frame centered at Pelvis' COM."""
+        """Get the origin of the LeftShank in the global frame centered at Pelvis' COM."""
         return np.asarray(human.J2.pos - human.P.center_of_mass).reshape(3)
+
+
+class LeftFoot(BioModSegment):
+
+    def __init__(self, human: yeadon.Human, rotations: str = ''):
+        label = 'LeftFoot'
+        parent = 'LeftShank'
+        rt = O
+        xyz = LeftFoot.get_origin(human) - LeftShank.get_origin(human)
+        translations = ''
+
+        segment = yeadon.segment.Segment(
+            label='',
+            pos=O.reshape(3,1),
+            rot_mat=_1_,
+            solids=human.J2.solids[2:],
+            color=O,
+            build_toward_positive_z=False
+        )
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
+        mass = segment.mass
+        inertia = segment.rel_inertia
+        BioModSegment.__init__(
+            self,
+            label,
+            parent,
+            rt,
+            xyz,
+            translations,
+            rotations,
+            com,
+            mass,
+            inertia
+        )
+
+    @staticmethod
+    def get_origin(human: yeadon.Human):
+        """Get the origin of the LeftFoot in the global frame centered at Pelvis' COM."""
+        length = human.J2.solids[0].height + human.J2.solids[1].height
+        dir = human.J2.end_pos - human.J2.pos
+        dir = dir / np.linalg.norm(dir)
+        pos = human.J2.pos + length * dir
+        return np.asarray(pos - human.P.center_of_mass).reshape(3)
 
 
 class RightThigh(BioModSegment):
@@ -426,21 +586,30 @@ class RightThigh(BioModSegment):
         return np.asarray(human.K1.pos - human.P.center_of_mass).reshape(3)
 
 
-class RightShankAndFoot(BioModSegment):
+class RightShank(BioModSegment):
 
     def __init__(
         self,
         human: yeadon.Human,
         rotations: str = ''
     ):
-        label = 'RightShankAndFoot'
+        label = 'RightShank'
         parent = 'RightTigh'
         rt = O
-        xyz = RightShankAndFoot.get_origin(human) - RightThigh.get_origin(human)
+        xyz = RightShank.get_origin(human) - RightThigh.get_origin(human)
         translations = ''
-        com = np.asarray(human.K2.rel_center_of_mass).reshape(3)
-        mass = human.K2.mass
-        inertia = human.K2.rel_inertia
+
+        segment = yeadon.segment.Segment(
+            label='',
+            pos=O.reshape(3,1),
+            rot_mat=_1_,
+            solids=human.K2.solids[:2],
+            color=O,
+            build_toward_positive_z=False
+        )
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
+        mass = segment.mass
+        inertia = segment.rel_inertia
         BioModSegment.__init__(
             self,
             label,
@@ -456,23 +625,65 @@ class RightShankAndFoot(BioModSegment):
 
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
-        """Get the origin of the RightShankAndFoot in the global frame centered at Pelvis' COM."""
+        """Get the origin of the RightShank in the global frame centered at Pelvis' COM."""
         return np.asarray(human.K2.pos - human.P.center_of_mass).reshape(3)
 
 
-class Tighs(BioModSegment):
+class RightFoot(BioModSegment):
+
+    def __init__(self, human: yeadon.Human, rotations: str = ''):
+        label = 'RightFoot'
+        parent = 'RightShank'
+        rt = O
+        xyz = RightFoot.get_origin(human) - RightShank.get_origin(human)
+        translations = ''
+
+        segment = yeadon.segment.Segment(
+            label='',
+            pos=O.reshape(3,1),
+            rot_mat=_1_,
+            solids=human.K2.solids[2:],
+            color=O,
+            build_toward_positive_z=False
+        )
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
+        mass = segment.mass
+        inertia = segment.rel_inertia
+        BioModSegment.__init__(
+            self,
+            label,
+            parent,
+            rt,
+            xyz,
+            translations,
+            rotations,
+            com,
+            mass,
+            inertia
+        )
+
+    @staticmethod
+    def get_origin(human: yeadon.Human):
+        """Get the origin of the RightFoot in the global frame centered at Pelvis' COM."""
+        length = human.K2.solids[0].height + human.K2.solids[1].height
+        dir = human.K2.end_pos - human.K2.pos
+        dir = dir / np.linalg.norm(dir)
+        pos = human.K2.pos + length * dir
+        return np.asarray(pos - human.P.center_of_mass).reshape(3)
+
+
+class Thighs(BioModSegment):
     """The tighs of a human if they must remain together."""
 
     def __init__(
         self,
         human: yeadon.Human,
         rotations: str = 'xy',
-        is_symetric: bool = False
     ):
-        label = 'Tighs'
+        label = 'Thighs'
         parent = 'Pelvis'
         rt = O
-        xyz = Tighs.get_origin(human) - Pelvis.get_origin(human)
+        xyz = Thighs.get_origin(human) - Pelvis.get_origin(human)
         translations = ''
 
         mass = human.J1.mass + human.K1.mass
@@ -480,8 +691,6 @@ class Tighs(BioModSegment):
         com_global = np.asarray(
                 (human.J1.mass * human.J1.center_of_mass + human.K1.mass * human.K1.center_of_mass) / mass
         ).reshape(3)
-        if is_symetric:  # then center the COM of the tighs
-            com_global[:2] = 0.
         com = com_global - xyz
 
         inertia = parallel_axis_theorem(0, human.J1.center_of_mass-com_global, human.J1.mass) \
@@ -499,7 +708,6 @@ class Tighs(BioModSegment):
             mass,
             inertia
         )
-        self.is_symetric = is_symetric
 
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
@@ -507,32 +715,47 @@ class Tighs(BioModSegment):
         return np.asarray(human.P.pos - human.P.center_of_mass).reshape(3)
 
 
-class ShanksAndFeet(BioModSegment):
+class Shanks(BioModSegment):
     """The shanks and feet of a human if they must remain together."""
 
     def __init__(
         self,
         human: yeadon.Human,
         rotations: str = 'xy',
-        is_symetric: bool = False
     ):
-        label = 'ShankAndFeet'
-        parent = 'Tighs'
+        label = 'Shanks'
+        parent = 'Thighs'
         rt = O
-        xyz = LeftShankAndFoot.get_origin(human) - Tighs.get_origin(human)
+        xyz = Shanks.get_origin(human) - Thighs.get_origin(human)
         translations = ''
 
-        mass = human.J2.mass + human.K2.mass
+        segment_J = yeadon.segment.Segment(
+            label='',
+            pos=O.reshape(3,1),
+            rot_mat=_1_,
+            solids=human.J2.solids[:2],
+            color=O,
+            build_toward_positive_z=False
+        )
+
+        segment_K = yeadon.segment.Segment(
+            label='',
+            pos=O.reshape(3,1),
+            rot_mat=_1_,
+            solids=human.K2.solids[:2],
+            color=O,
+            build_toward_positive_z=False
+        )
+
+        mass = segment_J.mass + segment_K.mass
 
         com_global = np.asarray(
-                (human.J2.mass * human.J2.center_of_mass + human.K2.mass * human.K2.center_of_mass) / mass
+                (segment_J.mass * segment_J.center_of_mass + segment_K.mass * segment_K.center_of_mass) / mass
         ).reshape(3)
-        if is_symetric:  # then center the COM of the tighs
-            com_global[:2] = 0.
         com = com_global - xyz
 
-        inertia = parallel_axis_theorem(0, human.J2.center_of_mass-com_global, human.J2.mass) \
-                    + parallel_axis_theorem(0, human.K2.center_of_mass-com_global, human.K2.mass)
+        inertia = parallel_axis_theorem(0, segment_J.center_of_mass-com_global, segment_J.mass) \
+                    + parallel_axis_theorem(0, segment_K.center_of_mass-com_global, segment_K.mass)
 
         BioModSegment.__init__(
             self,
@@ -546,12 +769,73 @@ class ShanksAndFeet(BioModSegment):
             mass,
             inertia
         )
-        self.is_symetric = is_symetric
 
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the ShanksAndFeet in the global frame centered at Pelvis' COM."""
-        return np.asarray((human.J1.pos + human.K1.pos) / 2. - human.P.center_of_mass).reshape(3)
+        return np.asarray((human.J2.pos + human.K2.pos) / 2. - human.P.center_of_mass).reshape(3)
+
+
+class Feet(BioModSegment):
+    """The shanks and feet of a human if they must remain together."""
+
+    def __init__(
+        self,
+        human: yeadon.Human,
+        rotations: str = 'xy',
+    ):
+        label = 'Feet'
+        parent = 'Shanks'
+        rt = O
+        xyz = Feet.get_origin(human) - Shanks.get_origin(human)
+        translations = ''
+
+        segment_J = yeadon.segment.Segment(
+            label='',
+            pos=O.reshape(3, 1),
+            rot_mat=_1_,
+            solids=human.J2.solids[2:],
+            color=O,
+            build_toward_positive_z=False
+        )
+
+        segment_K = yeadon.segment.Segment(
+            label='',
+            pos=O.reshape(3, 1),
+            rot_mat=_1_,
+            solids=human.K2.solids[2:],
+            color=O,
+            build_toward_positive_z=False
+        )
+
+        mass = segment_J.mass + segment_K.mass
+
+        com_global = np.asarray(
+            (segment_J.mass * segment_J.center_of_mass + segment_K.mass * segment_K.center_of_mass) / mass
+        ).reshape(3)
+        com = com_global - xyz
+
+        inertia = parallel_axis_theorem(0, segment_J.center_of_mass - com_global, segment_J.mass) \
+                  + parallel_axis_theorem(0, segment_K.center_of_mass - com_global, segment_K.mass)
+
+        BioModSegment.__init__(
+            self,
+            label,
+            parent,
+            rt,
+            xyz,
+            translations,
+            rotations,
+            com,
+            mass,
+            inertia
+        )
+
+    @staticmethod
+    def get_origin(human: yeadon.Human) -> Vec3:
+        """Get the origin of the ShanksAndFeet in the global frame centered at Pelvis' COM."""
+        return np.asarray((human.J2.solids[2].pos + human.K1.solids[2].pos) / 2. - human.P.center_of_mass).reshape(3)
+
 
 
 class BioModHuman:
@@ -561,13 +845,17 @@ class BioModHuman:
         self.thorax = Thorax(human)
         self.pelvis = Pelvis(human)
         self.right_upper_arm = RightUpperArm(human)
-        self.right_forearm_hand = RightForearmAndHand(human)
+        self.right_forearm = RightForearm(human)
+        self.right_hand = RightHand(human)
         self.left_upper_arm = LeftUpperArm(human)
-        self.left_forearm_hand = LeftForearmAndHand(human)
+        self.left_forearm = LeftForearm(human)
+        self.left_hand = LeftHand(human)
         self.right_thigh = RightThigh(human)
-        self.right_shank_foot = RightShankAndFoot(human)
+        self.right_shank = RightShank(human)
+        self.right_foot = RightFoot(human)
         self.left_thigh = LeftThigh(human)
-        self.left_shank_foot = LeftShankAndFoot(human)
+        self.left_shank = LeftShank(human)
+        self.left_foot = LeftFoot(human)
 
     def __str__(self):
         biomod = "version 4\n\nroot_actuated 0\nexternal_forces 0\n\n"
@@ -575,13 +863,52 @@ class BioModHuman:
         biomod += f"{self.thorax}\n\n"
         biomod += f"{self.head}\n\n"
         biomod += f"{self.right_upper_arm}\n\n"
-        biomod += f"{self.right_forearm_hand}\n\n"
+        biomod += f"{self.right_forearm}\n\n"
+        biomod += f"{self.right_hand}\n\n"
         biomod += f"{self.left_upper_arm}\n\n"
-        biomod += f"{self.left_forearm_hand}\n\n"
+        biomod += f"{self.left_forearm}\n\n"
+        biomod += f"{self.left_hand}\n\n"
         biomod += f"{self.right_thigh}\n\n"
-        biomod += f"{self.right_shank_foot}\n\n"
+        biomod += f"{self.right_shank}\n\n"
+        biomod += f"{self.right_foot}\n\n"
         biomod += f"{self.left_thigh}\n\n"
-        biomod += f"{self.left_shank_foot}\n"
+        biomod += f"{self.left_shank}\n\n"
+        biomod += f"{self.left_foot}\n"
+
+        return biomod
+
+
+class BioModHumanFusedLegs:
+
+    def __init__(self, human: yeadon.Human):
+        self.head = Head(human)
+        self.thorax = Thorax(human)
+        self.pelvis = Pelvis(human)
+        self.right_upper_arm = RightUpperArm(human)
+        self.right_forearm = RightForearm(human)
+        self.right_hand = RightHand(human)
+        self.left_upper_arm = LeftUpperArm(human)
+        self.left_forearm = LeftForearm(human)
+        self.left_hand = LeftHand(human)
+        self.thighs = Thighs(human)
+        self.shanks = Shanks(human)
+        self.feet = Feet(human)
+
+
+    def __str__(self):
+        biomod = "version 4\n\nroot_actuated 0\nexternal_forces 0\n\n"
+        biomod += f"{self.pelvis}\n\n"
+        biomod += f"{self.thorax}\n\n"
+        biomod += f"{self.head}\n\n"
+        biomod += f"{self.right_upper_arm}\n\n"
+        biomod += f"{self.right_forearm}\n\n"
+        biomod += f"{self.right_hand}\n\n"
+        biomod += f"{self.left_upper_arm}\n\n"
+        biomod += f"{self.left_forearm}\n\n"
+        biomod += f"{self.left_hand}\n\n"
+        biomod += f"{self.thighs}\n\n"
+        biomod += f"{self.shanks}\n\n"
+        biomod += f"{self.feet}\n\n"
 
         return biomod
 

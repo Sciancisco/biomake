@@ -104,8 +104,8 @@ class Pelvis(BioModSegment):
     def __init__(
         self,
         human: yeadon.Human,
-        translations: str = 'xyz',
-        rotations: str ='xyz'
+        translations: str = '',
+        rotations: str ='',**options
     ):
         label = 'Pelvis'
         parent = 'ROOT'
@@ -124,7 +124,8 @@ class Pelvis(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -138,7 +139,7 @@ class Thorax(BioModSegment):
     def __init__(
         self,
         human: yeadon.Human,
-        rotations: str = ''
+        rotations: str = '',**options
     ):
         label = 'Thorax'
         parent = 'Pelvis'
@@ -159,7 +160,8 @@ class Thorax(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -173,7 +175,7 @@ class Head(BioModSegment):
     def __init__(
         self,
         human: yeadon.Human,
-        rotations: str = ''
+        rotations: str = '',**options
     ):
         label = 'Head'
         parent = 'Thorax'
@@ -194,7 +196,8 @@ class Head(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -212,7 +215,7 @@ class LeftUpperArm(BioModSegment):
     def __init__(
         self,
         human: yeadon.Human,
-        rotations: str = 'zy'
+        rotations: str = '',**options
     ):
         label = 'LeftUpperArm'
         parent = 'Thorax'
@@ -234,7 +237,8 @@ class LeftUpperArm(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -248,7 +252,7 @@ class LeftForearm(BioModSegment):
     def __init__(
         self,
         human: yeadon.Human,
-        rotations: str = 'zy'
+        rotations: str = '',**options
     ):
         label = 'LeftForearm'
         parent = 'LeftUpperArm'
@@ -269,7 +273,8 @@ class LeftForearm(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -280,7 +285,7 @@ class LeftForearm(BioModSegment):
 
 class LeftHand(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = ''):
+    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
         label = 'LeftHand'
         parent = 'LeftForearm'
         rt = O
@@ -300,7 +305,8 @@ class LeftHand(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -318,7 +324,7 @@ class RightUpperArm(BioModSegment):
     def __init__(
         self,
         human: yeadon.Human,
-        rotations: str = 'zy'
+        rotations: str = '',**options
     ):
         label = 'RightUpperArm'
         parent = 'Thorax'
@@ -338,7 +344,8 @@ class RightUpperArm(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -352,7 +359,7 @@ class RightForearm(BioModSegment):
     def __init__(
         self,
         human: yeadon.Human,
-        rotations: str = 'zy'
+        rotations: str = '',**options
     ):
         label = 'RightForearm'
         parent = 'RightUpperArm'
@@ -373,7 +380,8 @@ class RightForearm(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -384,7 +392,7 @@ class RightForearm(BioModSegment):
 
 class RightHand(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = ''):
+    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
         label = 'RightHand'
         parent = 'RightForearm'
         rt = O
@@ -404,7 +412,8 @@ class RightHand(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -422,7 +431,7 @@ class LeftThigh(BioModSegment):
     def __init__(
         self,
         human: yeadon.Human,
-        rotations: str = 'xy'
+        rotations: str = '',**options
     ):
         label = 'LeftTigh'
         parent = 'Pelvis'
@@ -442,7 +451,8 @@ class LeftThigh(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -456,7 +466,7 @@ class LeftShank(BioModSegment):
     def __init__(
         self,
         human: yeadon.Human,
-        rotations: str = ''
+        rotations: str = '',**options
     ):
         label = 'LeftShank'
         parent = 'LeftTigh'
@@ -477,7 +487,8 @@ class LeftShank(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -488,7 +499,7 @@ class LeftShank(BioModSegment):
 
 class LeftFoot(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = ''):
+    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
         label = 'LeftFoot'
         parent = 'LeftShank'
         rt = O
@@ -508,7 +519,8 @@ class LeftFoot(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -526,7 +538,7 @@ class RightThigh(BioModSegment):
     def __init__(
         self,
         human: yeadon.Human,
-        rotations: str = 'xy'
+        rotations: str = 'xy',**options
     ):
         label = 'RightTigh'
         parent = 'Pelvis'
@@ -546,7 +558,8 @@ class RightThigh(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -560,7 +573,7 @@ class RightShank(BioModSegment):
     def __init__(
         self,
         human: yeadon.Human,
-        rotations: str = ''
+        rotations: str = '',**options
     ):
         label = 'RightShank'
         parent = 'RightTigh'
@@ -581,7 +594,8 @@ class RightShank(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -592,7 +606,7 @@ class RightShank(BioModSegment):
 
 class RightFoot(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = ''):
+    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
         label = 'RightFoot'
         parent = 'RightShank'
         rt = O
@@ -612,7 +626,8 @@ class RightFoot(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -631,7 +646,7 @@ class Thighs(BioModSegment):
     def __init__(
         self,
         human: yeadon.Human,
-        rotations: str = 'xy',
+        rotations: str = '', **options
     ):
         label = 'Thighs'
         parent = 'Pelvis'
@@ -652,7 +667,8 @@ class Thighs(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -667,7 +683,7 @@ class Shanks(BioModSegment):
     def __init__(
         self,
         human: yeadon.Human,
-        rotations: str = 'xy',
+        rotations: str = '', **options
     ):
         label = 'Shanks'
         parent = 'Thighs'
@@ -688,7 +704,8 @@ class Shanks(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod
@@ -703,7 +720,7 @@ class Feet(BioModSegment):
     def __init__(
         self,
         human: yeadon.Human,
-        rotations: str = 'xy',
+        rotations: str = '', **options
     ):
         label = 'Feet'
         parent = 'Shanks'
@@ -724,7 +741,8 @@ class Feet(BioModSegment):
             rotations,
             com,
             mass,
-            inertia
+            inertia,
+            **options
         )
 
     @staticmethod

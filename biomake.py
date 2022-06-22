@@ -7,6 +7,7 @@ import yeadon
 
 # From [https://stackoverflow.com/questions/71109838/numpy-typing-with-specific-shape-and-datatype]
 DType = TypeVar("DType", bound=np.generic)
+Vec2 = Annotated[npt.NDArray[DType], Literal[2]]
 Vec3 = Annotated[npt.NDArray[DType], Literal[3]]
 Mat3x3 = Annotated[npt.NDArray[DType], Literal[3, 3]]
 
@@ -26,7 +27,15 @@ class BioModSegment:
         rotations: str,
         com: Vec3,
         mass: float,
-        inertia: Mat3x3
+        inertia: Mat3x3,
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None
     ):
         self.label = label
         self.parent = parent
@@ -37,6 +46,14 @@ class BioModSegment:
         self.com = com
         self.mass = mass
         self.inertia = inertia
+        self.rangesQ = rangesQ
+        self.mesh = mesh
+        self.meshfile = meshfile
+        self.meshcolor = meshcolor
+        self.meshscale = meshscale
+        self.meshrt = meshrt
+        self.meshxyz = meshxyz
+        self.patch = patch
 
     def __str__(self):
         mod = f"segment {self.label}\n"
@@ -46,17 +63,34 @@ class BioModSegment:
             self.translations += f"\ttranslations {self.translations}\n"
         if self.rotations:
             self.rotations += f"\trotations {self.rotations}\n"
+        if self.rangesQ:
+            mod += f"\trangesQ\n"
+            for r in self.rangesQ:
+                mod += f"\t\t{BioModSegment.format_vec(r)}\n"
         mod += f"\tcom {BioModSegment.format_vec(self.com)}\n"
         mod += f"\tmass {self.mass}\n"
         mod += f"\tinertia\n" + BioModSegment.format_mat(self.inertia, leading="\t\t") + "\n"
-        mod += f"\tmesh 0 0 0\n"
+        if self.meshfile:
+            mod += f"\tmeshfile {self.meshfile}\n"
+        elif self.mesh:
+            for m in self.mesh:
+                mod += f"\tmesh {BioModSegment.format_vec(m)}\n"
+        if self.meshcolor:
+            mod += f"\tmeshcolor {BioModSegment.format_vec(self.meshcolor)}\n"
+        if self.meshscale:
+            mod += f"\tmeshscale {BioModSegment.format_vec(self.meshscale)}\n"
+        if self.meshrt and self.meshxyz:
+            mod += f"\tmeshrt {BioModSegment.format_vec(self.meshscale)} xyz {BioModSegment.format_vec(self.meshxyz)}\n"
+        if self.patch:
+            for p in self.patch:
+                mod += f"\tpatch {BioModSegment.format_vec(p)}\n"
         mod += "endsegment"
 
         return mod
 
     @staticmethod
-    def format_vec(vec: Vec3):
-        return f"{vec[0]} {vec[1]} {vec[2]}"
+    def format_vec(vec):
+        return ("{} " * len(vec)).format(*vec)[:-1]  # fancy
 
     @staticmethod
     def format_mat(mat: Mat3x3, leading=""):

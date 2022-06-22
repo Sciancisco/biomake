@@ -686,15 +686,8 @@ class Thighs(BioModSegment):
         xyz = Thighs.get_origin(human) - Pelvis.get_origin(human)
         translations = ''
 
-        mass = human.J1.mass + human.K1.mass
-
-        com_global = np.asarray(
-                (human.J1.mass * human.J1.center_of_mass + human.K1.mass * human.K1.center_of_mass) / mass
-        ).reshape(3)
-        com = com_global - xyz
-
-        inertia = parallel_axis_theorem(0, human.J1.center_of_mass-com_global, human.J1.mass) \
-                    + parallel_axis_theorem(0, human.K1.center_of_mass-com_global, human.K1.mass)
+        mass, com_global, inertia = human.combine_inertia(('J1', 'K1'))
+        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - xyz
 
         BioModSegment.__init__(
             self,
@@ -729,33 +722,8 @@ class Shanks(BioModSegment):
         xyz = Shanks.get_origin(human) - Thighs.get_origin(human)
         translations = ''
 
-        segment_J = yeadon.segment.Segment(
-            label='',
-            pos=O.reshape(3,1),
-            rot_mat=_1_,
-            solids=human.J2.solids[:2],
-            color=O,
-            build_toward_positive_z=False
-        )
-
-        segment_K = yeadon.segment.Segment(
-            label='',
-            pos=O.reshape(3,1),
-            rot_mat=_1_,
-            solids=human.K2.solids[:2],
-            color=O,
-            build_toward_positive_z=False
-        )
-
-        mass = segment_J.mass + segment_K.mass
-
-        com_global = np.asarray(
-                (segment_J.mass * segment_J.center_of_mass + segment_K.mass * segment_K.center_of_mass) / mass
-        ).reshape(3)
-        com = com_global - xyz
-
-        inertia = parallel_axis_theorem(0, segment_J.center_of_mass-com_global, segment_J.mass) \
-                    + parallel_axis_theorem(0, segment_K.center_of_mass-com_global, segment_K.mass)
+        mass, com_global, inertia = human.combine_inertia(('j3', 'j4', 'k3', 'k4'))
+        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - xyz
 
         BioModSegment.__init__(
             self,
@@ -790,33 +758,8 @@ class Feet(BioModSegment):
         xyz = Feet.get_origin(human) - Shanks.get_origin(human)
         translations = ''
 
-        segment_J = yeadon.segment.Segment(
-            label='',
-            pos=O.reshape(3, 1),
-            rot_mat=_1_,
-            solids=human.J2.solids[2:],
-            color=O,
-            build_toward_positive_z=False
-        )
-
-        segment_K = yeadon.segment.Segment(
-            label='',
-            pos=O.reshape(3, 1),
-            rot_mat=_1_,
-            solids=human.K2.solids[2:],
-            color=O,
-            build_toward_positive_z=False
-        )
-
-        mass = segment_J.mass + segment_K.mass
-
-        com_global = np.asarray(
-            (segment_J.mass * segment_J.center_of_mass + segment_K.mass * segment_K.center_of_mass) / mass
-        ).reshape(3)
-        com = com_global - xyz
-
-        inertia = parallel_axis_theorem(0, segment_J.center_of_mass - com_global, segment_J.mass) \
-                  + parallel_axis_theorem(0, segment_K.center_of_mass - com_global, segment_K.mass)
+        mass, com_global, inertia = human.combine_inertia(('j5', 'j6', 'j7', 'j8', 'k5', 'k6', 'k7', 'k8'))
+        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - xyz
 
         BioModSegment.__init__(
             self,
@@ -833,9 +776,15 @@ class Feet(BioModSegment):
 
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
-        """Get the origin of the ShanksAndFeet in the global frame centered at Pelvis' COM."""
-        return np.asarray((human.J2.solids[2].pos + human.K1.solids[2].pos) / 2. - human.P.center_of_mass).reshape(3)
-
+        """Get the origin of the Feet in the global frame centered at Pelvis' COM."""
+        length = ( human.J2.solids[0].height + human.J2.solids[1].height
+                  + human.K2.solids[0].height + human.K2.solids[1].height ) / 2.
+        dir_J = human.K2.end_pos - human.K2.pos
+        dir_K = human.K2.end_pos - human.K2.pos
+        dir = (dir_J + dir_K) / 2.
+        dir = dir / np.linalg.norm(dir)
+        pos = (human.J2.pos + human.K2.pos) / 2. + length * dir
+        return np.asarray(pos - human.P.center_of_mass).reshape(3)
 
 
 class BioModHuman:

@@ -101,12 +101,7 @@ class BioModSegment:
 
 class Pelvis(BioModSegment):
 
-    def __init__(
-        self,
-        human: yeadon.Human,
-        translations: str = '',
-        rotations: str ='',**options
-    ):
+    def __init__(self, human: yeadon.Human, translations: str = '', rotations: str ='', **options):
         label = 'Pelvis'
         parent = 'ROOT'
         rt = O
@@ -136,11 +131,7 @@ class Pelvis(BioModSegment):
 
 class Thorax(BioModSegment):
 
-    def __init__(
-        self,
-        human: yeadon.Human,
-        rotations: str = '',**options
-    ):
+    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
         label = 'Thorax'
         parent = 'Pelvis'
         rt = O
@@ -172,11 +163,7 @@ class Thorax(BioModSegment):
 
 class Head(BioModSegment):
 
-    def __init__(
-        self,
-        human: yeadon.Human,
-        rotations: str = '',**options
-    ):
+    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
         label = 'Head'
         parent = 'Thorax'
         rt = O
@@ -212,11 +199,7 @@ class Head(BioModSegment):
 
 class LeftUpperArm(BioModSegment):
 
-    def __init__(
-        self,
-        human: yeadon.Human,
-        rotations: str = '',**options
-    ):
+    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
         label = 'LeftUpperArm'
         parent = 'Thorax'
         rt = O
@@ -249,11 +232,7 @@ class LeftUpperArm(BioModSegment):
 
 class LeftForearm(BioModSegment):
 
-    def __init__(
-        self,
-        human: yeadon.Human,
-        rotations: str = '',**options
-    ):
+    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
         label = 'LeftForearm'
         parent = 'LeftUpperArm'
         rt = O
@@ -321,11 +300,7 @@ class LeftHand(BioModSegment):
 
 class RightUpperArm(BioModSegment):
 
-    def __init__(
-        self,
-        human: yeadon.Human,
-        rotations: str = '',**options
-    ):
+    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
         label = 'RightUpperArm'
         parent = 'Thorax'
         rt = O
@@ -356,11 +331,7 @@ class RightUpperArm(BioModSegment):
 
 class RightForearm(BioModSegment):
 
-    def __init__(
-        self,
-        human: yeadon.Human,
-        rotations: str = '',**options
-    ):
+    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
         label = 'RightForearm'
         parent = 'RightUpperArm'
         rt = O
@@ -428,11 +399,7 @@ class RightHand(BioModSegment):
 
 class LeftThigh(BioModSegment):
 
-    def __init__(
-        self,
-        human: yeadon.Human,
-        rotations: str = '',**options
-    ):
+    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
         label = 'LeftTigh'
         parent = 'Pelvis'
         rt = O
@@ -463,11 +430,7 @@ class LeftThigh(BioModSegment):
 
 class LeftShank(BioModSegment):
 
-    def __init__(
-        self,
-        human: yeadon.Human,
-        rotations: str = '',**options
-    ):
+    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
         label = 'LeftShank'
         parent = 'LeftTigh'
         rt = O
@@ -535,11 +498,7 @@ class LeftFoot(BioModSegment):
 
 class RightThigh(BioModSegment):
 
-    def __init__(
-        self,
-        human: yeadon.Human,
-        rotations: str = 'xy',**options
-    ):
+    def __init__(self, human: yeadon.Human, rotations: str = 'xy', **options):
         label = 'RightTigh'
         parent = 'Pelvis'
         rt = O
@@ -570,11 +529,7 @@ class RightThigh(BioModSegment):
 
 class RightShank(BioModSegment):
 
-    def __init__(
-        self,
-        human: yeadon.Human,
-        rotations: str = '',**options
-    ):
+    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
         label = 'RightShank'
         parent = 'RightTigh'
         rt = O
@@ -643,11 +598,7 @@ class RightFoot(BioModSegment):
 class Thighs(BioModSegment):
     """The tighs of a human if they must remain together."""
 
-    def __init__(
-        self,
-        human: yeadon.Human,
-        rotations: str = '', **options
-    ):
+    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
         label = 'Thighs'
         parent = 'Pelvis'
         rt = O
@@ -680,11 +631,7 @@ class Thighs(BioModSegment):
 class Shanks(BioModSegment):
     """The shanks and feet of a human if they must remain together."""
 
-    def __init__(
-        self,
-        human: yeadon.Human,
-        rotations: str = '', **options
-    ):
+    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
         label = 'Shanks'
         parent = 'Thighs'
         rt = O
@@ -717,11 +664,7 @@ class Shanks(BioModSegment):
 class Feet(BioModSegment):
     """The shanks and feet of a human if they must remain together."""
 
-    def __init__(
-        self,
-        human: yeadon.Human,
-        rotations: str = '', **options
-    ):
+    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
         label = 'Feet'
         parent = 'Shanks'
         rt = O

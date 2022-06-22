@@ -12,11 +12,6 @@ Mat3x3 = Annotated[npt.NDArray[DType], Literal[3, 3]]
 
 
 O = np.zeros(3)
-_1_ = np.identity(3)
-
-
-def parallel_axis_theorem(I0: Mat3x3, R: Vec3, m: float) -> Vec3:
-    return I0 + m * (R @ R * _1_ - R @ R.T)  # danke Wikipedia [https://en.wikipedia.org/wiki/Parallel_axis_theorem]
 
 
 class BioModSegment:
@@ -76,7 +71,7 @@ class Pelvis(BioModSegment):
         self,
         human: yeadon.Human,
         translations: str = 'xyz',
-        rotations: str =' xyz'
+        rotations: str ='xyz'
     ):
         label = 'Pelvis'
         parent = 'ROOT'
@@ -117,16 +112,9 @@ class Thorax(BioModSegment):
         xyz = Thorax.get_origin(human) - Pelvis.get_origin(human)
         translations = ''
 
-        segment = yeadon.segment.Segment(
-            '',
-            O.reshape(3, 1),
-            _1_,
-            human.T.solids + human.C.solids[:2],  # nipple, shoulder, acromion
-            O
-        )
-        com = np.asarray(segment.rel_center_of_mass).reshape(3)
-        mass = segment.mass
-        inertia = segment.rel_inertia
+        mass, com_global, inertia = human.combine_inertia(('T', 's3', 's4'))
+        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - Thorax.get_origin(human)
+
         BioModSegment.__init__(
             self,
             label,
@@ -159,16 +147,9 @@ class Head(BioModSegment):
         xyz = Head.get_origin(human) - Thorax.get_origin(human)
         translations = ''
 
-        segment = yeadon.segment.Segment(
-            '',
-            O.reshape(3, 1),
-            _1_,
-            human.C.solids[2:],  # beneath nose, top of ear, top of head
-            O
-        )
-        com = np.asarray(segment.rel_center_of_mass).reshape(3)
-        mass = segment.mass
-        inertia = segment.rel_inertia
+        mass, com_global, inertia = human.combine_inertia(('s5', 's6', 's7'))
+        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - Head.get_origin(human)
+
         BioModSegment.__init__(
             self,
             label,
@@ -204,9 +185,11 @@ class LeftUpperArm(BioModSegment):
         rt = O
         xyz = LeftUpperArm.get_origin(human) - Thorax.get_origin(human)
         translations = ''
+
         com = np.asarray(human.A1.rel_center_of_mass).reshape(3)
         mass = human.A1.mass
         inertia = human.A1.rel_inertia
+
         BioModSegment.__init__(
             self,
             label,
@@ -239,17 +222,9 @@ class LeftForearm(BioModSegment):
         xyz = LeftForearm.get_origin(human) - LeftUpperArm.get_origin(human)
         translations = ''
 
-        segment = yeadon.segment.Segment(
-            label='',
-            pos=O.reshape(3, 1),
-            rot_mat=_1_,
-            solids=human.A2.solids[:2],  # max perimeter forearm, wrist
-            color=O,
-            build_toward_positive_z=False
-        )
-        com = np.asarray(segment.rel_center_of_mass).reshape(3)
-        mass = segment.mass
-        inertia = segment.rel_inertia
+        mass, com_global, inertia = human.combine_inertia(('a2', 'a3'))
+        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - LeftForearm.get_origin(human)
+
         BioModSegment.__init__(
             self,
             label,
@@ -278,17 +253,9 @@ class LeftHand(BioModSegment):
         xyz = LeftHand.get_origin(human) - LeftForearm.get_origin(human)
         translations = ''
 
-        segment = yeadon.segment.Segment(
-            label='',
-            pos=O.reshape(3,1),
-            rot_mat=_1_,
-            solids=human.A2.solids[2:],
-            color=O,
-            build_toward_positive_z=False
-        )
-        com = np.asarray(segment.rel_center_of_mass).reshape(3)
-        mass = segment.mass
-        inertia = segment.rel_inertia
+        mass, com_global, inertia = human.combine_inertia(('a4', 'a5', 'a6'))
+        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - LeftHand.get_origin(human)
+
         BioModSegment.__init__(
             self,
             label,
@@ -359,17 +326,9 @@ class RightForearm(BioModSegment):
         xyz = RightForearm.get_origin(human) - RightUpperArm.get_origin(human)
         translations = ''
 
-        segment = yeadon.segment.Segment(
-            label='',
-            pos=O.reshape(3, 1),
-            rot_mat=_1_,
-            solids=human.B2.solids[:2],  # max perimeter forearm, wrist
-            color=O,
-            build_toward_positive_z=False
-        )
-        com = np.asarray(segment.rel_center_of_mass).reshape(3)
-        mass = segment.mass
-        inertia = segment.rel_inertia
+        mass, com_global, inertia = human.combine_inertia(('b2', 'b3'))
+        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - RightForearm.get_origin(human)
+
         BioModSegment.__init__(
             self,
             label,
@@ -398,17 +357,9 @@ class RightHand(BioModSegment):
         xyz = RightHand.get_origin(human) - RightForearm.get_origin(human)
         translations = ''
 
-        segment = yeadon.segment.Segment(
-            label='',
-            pos=O.reshape(3,1),
-            rot_mat=_1_,
-            solids=human.B2.solids[2:],
-            color=O,
-            build_toward_positive_z=False
-        )
-        com = np.asarray(segment.rel_center_of_mass).reshape(3)
-        mass = segment.mass
-        inertia = segment.rel_inertia
+        mass, com_global, inertia = human.combine_inertia(('b4', 'b5', 'b6'))
+        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - RightHand.get_origin(human)
+
         BioModSegment.__init__(
             self,
             label,
@@ -479,17 +430,9 @@ class LeftShank(BioModSegment):
         xyz = LeftShank.get_origin(human) - LeftThigh.get_origin(human)
         translations = ''
 
-        segment = yeadon.segment.Segment(
-            label='',
-            pos=O.reshape(3,1),
-            rot_mat=_1_,
-            solids=human.J2.solids[:2],
-            color=O,
-            build_toward_positive_z=False
-        )
-        com = np.asarray(segment.rel_center_of_mass).reshape(3)
-        mass = segment.mass
-        inertia = segment.rel_inertia
+        mass, com_global, inertia = human.combine_inertia(('j3', 'j4'))
+        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - LeftShank.get_origin(human)
+
         BioModSegment.__init__(
             self,
             label,
@@ -518,17 +461,9 @@ class LeftFoot(BioModSegment):
         xyz = LeftFoot.get_origin(human) - LeftShank.get_origin(human)
         translations = ''
 
-        segment = yeadon.segment.Segment(
-            label='',
-            pos=O.reshape(3,1),
-            rot_mat=_1_,
-            solids=human.J2.solids[2:],
-            color=O,
-            build_toward_positive_z=False
-        )
-        com = np.asarray(segment.rel_center_of_mass).reshape(3)
-        mass = segment.mass
-        inertia = segment.rel_inertia
+        mass, com_global, inertia = human.combine_inertia(('j5', 'j6', 'j7', 'j8'))
+        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - LeftFoot.get_origin(human)
+
         BioModSegment.__init__(
             self,
             label,
@@ -599,17 +534,9 @@ class RightShank(BioModSegment):
         xyz = RightShank.get_origin(human) - RightThigh.get_origin(human)
         translations = ''
 
-        segment = yeadon.segment.Segment(
-            label='',
-            pos=O.reshape(3,1),
-            rot_mat=_1_,
-            solids=human.K2.solids[:2],
-            color=O,
-            build_toward_positive_z=False
-        )
-        com = np.asarray(segment.rel_center_of_mass).reshape(3)
-        mass = segment.mass
-        inertia = segment.rel_inertia
+        mass, com_global, inertia = human.combine_inertia(('k3', 'k4'))
+        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - RightShank.get_origin(human)
+
         BioModSegment.__init__(
             self,
             label,
@@ -638,17 +565,9 @@ class RightFoot(BioModSegment):
         xyz = RightFoot.get_origin(human) - RightShank.get_origin(human)
         translations = ''
 
-        segment = yeadon.segment.Segment(
-            label='',
-            pos=O.reshape(3,1),
-            rot_mat=_1_,
-            solids=human.K2.solids[2:],
-            color=O,
-            build_toward_positive_z=False
-        )
-        com = np.asarray(segment.rel_center_of_mass).reshape(3)
-        mass = segment.mass
-        inertia = segment.rel_inertia
+        mass, com_global, inertia = human.combine_inertia(('k5', 'k6', 'k7', 'k8'))
+        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - RightFoot.get_origin(human)
+
         BioModSegment.__init__(
             self,
             label,
@@ -687,7 +606,7 @@ class Thighs(BioModSegment):
         translations = ''
 
         mass, com_global, inertia = human.combine_inertia(('J1', 'K1'))
-        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - xyz
+        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - Thighs.get_origin(human)
 
         BioModSegment.__init__(
             self,
@@ -723,7 +642,7 @@ class Shanks(BioModSegment):
         translations = ''
 
         mass, com_global, inertia = human.combine_inertia(('j3', 'j4', 'k3', 'k4'))
-        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - xyz
+        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - Shanks.get_origin(human)
 
         BioModSegment.__init__(
             self,
@@ -759,7 +678,7 @@ class Feet(BioModSegment):
         translations = ''
 
         mass, com_global, inertia = human.combine_inertia(('j5', 'j6', 'j7', 'j8', 'k5', 'k6', 'k7', 'k8'))
-        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - xyz
+        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - Feet.get_origin(human)
 
         BioModSegment.__init__(
             self,
@@ -866,5 +785,5 @@ if __name__ == '__main__':
     import sys
     measurements = sys.argv[1]
     human = yeadon.Human(measurements)
-    biohuman = BioModHuman(human)
+    biohuman = BioModHumanFusedLegs(human)
     print(biohuman)

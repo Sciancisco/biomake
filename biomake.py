@@ -72,9 +72,9 @@ class BioModSegment:
         mod += f"\tparent {self.parent}\n"
         mod += f"\trt {format_vec(self.rt)} xyz {format_vec(self.xyz)}\n"
         if self.translations:
-            self.translations += f"\ttranslations {self.translations}\n"
+            mod += f"\ttranslations {self.translations}\n"
         if self.rotations:
-            self.rotations += f"\trotations {self.rotations}\n"
+            mod += f"\trotations {self.rotations}\n"
         if self.rangesQ:
             mod += f"\trangesQ\n"
             for r in self.rangesQ:
@@ -92,7 +92,7 @@ class BioModSegment:
         if self.meshscale:
             mod += f"\tmeshscale {format_vec(self.meshscale)}\n"
         if self.meshrt and self.meshxyz:
-            mod += f"\tmeshrt {format_vec(self.meshscale)} xyz {format_vec(self.meshxyz)}\n"
+            mod += f"\tmeshrt {format_vec(self.meshrt)} xyz {format_vec(self.meshxyz)}\n"
         if self.patch:
             for p in self.patch:
                 mod += f"\tpatch {format_vec(p)}\n"
@@ -103,7 +103,7 @@ class BioModSegment:
 
 class Pelvis(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, translations: str = '', rotations: str ='', **options):
+    def __init__(self, human: yeadon.Human, translations: str = '', rotations: str = '', **options):
         label = Pelvis.__name__
         parent = 'ROOT'
         rt = O
@@ -801,7 +801,6 @@ def parse_biomod_options(filename):
             if human_options['fused']:
                 Human = BioModHumanFusedLegs
             del human_options['fused']
-        del biomod_options['Human']
 
     segments_options = biomod_options
 

@@ -17,6 +17,22 @@ Mat3x3 = Annotated[npt.NDArray[DType], Literal[3, 3]]
 O = np.zeros(3)
 
 
+def rotation_matrix_from_vectors(vec1, vec2):
+    """ Find the rotation matrix that aligns vec1 to vec2
+    source [https://stackoverflow.com/questions/45142959/calculate-rotation-matrix-to-align-two-vectors-in-3d-space]
+    :param vec1: A 3d "source" vector
+    :param vec2: A 3d "destination" vector
+    :return mat: A transform matrix (3x3) which when applied to vec1, aligns it with vec2.
+    """
+    a, b = (vec1 / np.linalg.norm(vec1)).reshape(3), (vec2 / np.linalg.norm(vec2)).reshape(3)
+    v = np.cross(a, b)
+    c = np.dot(a, b)
+    s = np.linalg.norm(v)
+    kmat = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+    rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
+    return rotation_matrix
+
+
 def format_vec(vec):
     return ("{} " * len(vec)).format(*vec)[:-1]  # fancy
 
@@ -30,24 +46,24 @@ def format_mat(mat: Mat3x3, leading=""):
 class BioModSegment:
 
     def __init__(
-        self,
-        label: str,
-        parent: str,
-        rt: Vec3,
-        xyz: Vec3,
-        translations: str,
-        rotations: str,
-        com: Vec3,
-        mass: float,
-        inertia: Mat3x3,
-        rangesQ: list[Vec2] = None,
-        mesh: list[Vec3] = [(0, 0, 0)],
-        meshfile: str = None,
-        meshcolor: Vec3 = None,
-        meshscale: Vec3 = None,
-        meshrt: Vec3 = None,
-        meshxyz: Vec3 = None,
-        patch: list[Vec3] = None
+            self,
+            label: str,
+            parent: str,
+            rt: Vec3,
+            xyz: Vec3,
+            translations: str,
+            rotations: str,
+            com: Vec3,
+            mass: float,
+            inertia: Mat3x3,
+            rangesQ: list[Vec2],
+            mesh: list[Vec3],
+            meshfile: str,
+            meshcolor: Vec3,
+            meshscale: Vec3,
+            meshrt: Vec3,
+            meshxyz: Vec3,
+            patch: list[Vec3]
     ):
         self.label = label
         self.parent = parent
@@ -103,26 +119,46 @@ class BioModSegment:
 
 class Pelvis(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, translations: str = '', rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            translations: str = '',
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = Pelvis.__name__
         parent = 'ROOT'
-        rt = O
         xyz = Pelvis.get_origin(human)
         com = O
         mass = human.P.mass
-        inertia = human.P.rel_inertia  # umbilicus, lowest front rib
+        inertia = human.P.rel_inertia
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia,
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -133,28 +169,47 @@ class Pelvis(BioModSegment):
 
 class Thorax(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = Thorax.__name__
         parent = Pelvis.__name__
-        rt = O
         xyz = Thorax.get_origin(human) - Pelvis.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia = human.combine_inertia(('T', 's3', 's4'))
+        mass, com_global, inertia_global = human.combine_inertia(('T', 's3', 's4'))
         com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - Thorax.get_origin(human)
 
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia_global,  # I can do this because the systems of coordinates are aligned.
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -165,28 +220,47 @@ class Thorax(BioModSegment):
 
 class Head(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = Head.__name__
         parent = Thorax.__name__
-        rt = O
         xyz = Head.get_origin(human) - Thorax.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia = human.combine_inertia(('s5', 's6', 's7'))
+        mass, com_global, inertia_global = human.combine_inertia(('s5', 's6', 's7'))
         com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - Head.get_origin(human)
 
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia_global,  # I can do this because the systems of coordinates are aligned.
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -201,10 +275,22 @@ class Head(BioModSegment):
 
 class LeftUpperArm(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = LeftUpperArm.__name__
         parent = Thorax.__name__
-        rt = O
         xyz = LeftUpperArm.get_origin(human) - Thorax.get_origin(human)
         translations = ''
 
@@ -214,16 +300,23 @@ class LeftUpperArm(BioModSegment):
 
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia,
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -234,28 +327,47 @@ class LeftUpperArm(BioModSegment):
 
 class LeftForearm(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = LeftForearm.__name__
         parent = LeftUpperArm.__name__
-        rt = O
         xyz = LeftForearm.get_origin(human) - LeftUpperArm.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia = human.combine_inertia(('a2', 'a3'))
+        mass, com_global, inertia_global = human.combine_inertia(('a2', 'a3'))
         com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - LeftForearm.get_origin(human)
 
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia_global,  # TODO: I cannot do this because the systems of coordinates aren't aligned.
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -266,28 +378,47 @@ class LeftForearm(BioModSegment):
 
 class LeftHand(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = LeftHand.__name__
         parent = LeftForearm.__name__
-        rt = O
         xyz = LeftHand.get_origin(human) - LeftForearm.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia = human.combine_inertia(('a4', 'a5', 'a6'))
+        mass, com_global, inertia_global = human.combine_inertia(('a4', 'a5', 'a6'))
         com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - LeftHand.get_origin(human)
 
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia_global,  # TODO: I cannot do this because the systems of coordinates aren't aligned.
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -302,10 +433,22 @@ class LeftHand(BioModSegment):
 
 class RightUpperArm(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = RightUpperArm.__name__
         parent = Thorax.__name__
-        rt = O
         xyz = RightUpperArm.get_origin(human) - Thorax.get_origin(human)
         translations = ''
         com = np.asarray(human.B1.rel_center_of_mass).reshape(3)
@@ -313,16 +456,23 @@ class RightUpperArm(BioModSegment):
         inertia = human.B1.rel_inertia
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia,
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -333,28 +483,47 @@ class RightUpperArm(BioModSegment):
 
 class RightForearm(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = RightForearm.__name__
         parent = RightUpperArm.__name__
-        rt = O
         xyz = RightForearm.get_origin(human) - RightUpperArm.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia = human.combine_inertia(('b2', 'b3'))
+        mass, com_global, inertia_global = human.combine_inertia(('b2', 'b3'))
         com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - RightForearm.get_origin(human)
 
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia_global,  # TODO: I cannot do this because the systems of coordinates aren't aligned.
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -365,28 +534,47 @@ class RightForearm(BioModSegment):
 
 class RightHand(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = RightHand.__name__
         parent = RightForearm.__name__
-        rt = O
         xyz = RightHand.get_origin(human) - RightForearm.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia = human.combine_inertia(('b4', 'b5', 'b6'))
+        mass, com_global, inertia_global = human.combine_inertia(('b4', 'b5', 'b6'))
         com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - RightHand.get_origin(human)
 
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia_global,  # TODO: I cannot do this because the systems of coordinates aren't aligned.
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -401,10 +589,22 @@ class RightHand(BioModSegment):
 
 class LeftThigh(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = LeftThigh.__name__
         parent = Pelvis.__name__
-        rt = O
         xyz = LeftThigh.get_origin(human) - Pelvis.get_origin(human)
         translations = ''
         com = np.asarray(human.J1.rel_center_of_mass).reshape(3)
@@ -412,16 +612,23 @@ class LeftThigh(BioModSegment):
         inertia = human.J1.rel_inertia
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia,
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -432,28 +639,47 @@ class LeftThigh(BioModSegment):
 
 class LeftShank(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = LeftShank.__name__
         parent = LeftThigh.__name__
-        rt = O
         xyz = LeftShank.get_origin(human) - LeftThigh.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia = human.combine_inertia(('j3', 'j4'))
+        mass, com_global, inertia_global = human.combine_inertia(('j3', 'j4'))
         com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - LeftShank.get_origin(human)
 
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia_global,  # TODO: I cannot do this because the systems of coordinates aren't aligned.
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -464,28 +690,47 @@ class LeftShank(BioModSegment):
 
 class LeftFoot(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = LeftFoot.__name__
         parent = LeftShank.__name__
-        rt = O
         xyz = LeftFoot.get_origin(human) - LeftShank.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia = human.combine_inertia(('j5', 'j6', 'j7', 'j8'))
+        mass, com_global, inertia_global = human.combine_inertia(('j5', 'j6', 'j7', 'j8'))
         com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - LeftFoot.get_origin(human)
 
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia_global,  # TODO: I cannot do this because the systems of coordinates aren't aligned.
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -500,10 +745,22 @@ class LeftFoot(BioModSegment):
 
 class RightThigh(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = 'xy', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = RightThigh.__name__
         parent = Pelvis.__name__
-        rt = O
         xyz = RightThigh.get_origin(human) - Pelvis.get_origin(human)
         translations = ''
         com = np.asarray(human.K1.rel_center_of_mass).reshape(3)
@@ -511,16 +768,23 @@ class RightThigh(BioModSegment):
         inertia = human.K1.rel_inertia
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia,
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -531,28 +795,47 @@ class RightThigh(BioModSegment):
 
 class RightShank(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = RightShank.__name__
         parent = RightThigh.__name__
-        rt = O
         xyz = RightShank.get_origin(human) - RightThigh.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia = human.combine_inertia(('k3', 'k4'))
+        mass, com_global, inertia_global = human.combine_inertia(('k3', 'k4'))
         com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - RightShank.get_origin(human)
 
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia_global,  # TODO: I cannot do this because the systems of coordinates aren't aligned.
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -563,28 +846,47 @@ class RightShank(BioModSegment):
 
 class RightFoot(BioModSegment):
 
-    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = RightFoot.__name__
         parent = RightShank.__name__
-        rt = O
         xyz = RightFoot.get_origin(human) - RightShank.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia = human.combine_inertia(('k5', 'k6', 'k7', 'k8'))
+        mass, com_global, inertia_global = human.combine_inertia(('k5', 'k6', 'k7', 'k8'))
         com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - RightFoot.get_origin(human)
 
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia_global,  # TODO: I cannot do this because the systems of coordinates aren't aligned.
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -600,10 +902,22 @@ class RightFoot(BioModSegment):
 class Thighs(BioModSegment):
     """The tighs of a human if they must remain together."""
 
-    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = Thighs.__name__
         parent = Pelvis.__name__
-        rt = O
         xyz = Thighs.get_origin(human) - Pelvis.get_origin(human)
         translations = ''
 
@@ -612,16 +926,23 @@ class Thighs(BioModSegment):
 
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia,  # I can do this because the systems of coordinates are aligned.
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -633,10 +954,22 @@ class Thighs(BioModSegment):
 class Shanks(BioModSegment):
     """The shanks and feet of a human if they must remain together."""
 
-    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = Shanks.__name__
         parent = Thighs.__name__
-        rt = O
         xyz = Shanks.get_origin(human) - Thighs.get_origin(human)
         translations = ''
 
@@ -645,16 +978,23 @@ class Shanks(BioModSegment):
 
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia,  # I can do this because the systems of coordinates are aligned.
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod
@@ -666,10 +1006,22 @@ class Shanks(BioModSegment):
 class Feet(BioModSegment):
     """The shanks and feet of a human if they must remain together."""
 
-    def __init__(self, human: yeadon.Human, rotations: str = '', **options):
+    def __init__(
+            self,
+            human: yeadon.Human,
+            rt: Vec3 = O,
+            rotations: str = '',
+            rangesQ: list[Vec2] = None,
+            mesh: list[Vec3] = [(0, 0, 0)],
+            meshfile: str = None,
+            meshcolor: Vec3 = None,
+            meshscale: Vec3 = None,
+            meshrt: Vec3 = None,
+            meshxyz: Vec3 = None,
+            patch: list[Vec3] = None
+    ):
         label = Feet.__name__
         parent = Shanks.__name__
-        rt = O
         xyz = Feet.get_origin(human) - Shanks.get_origin(human)
         translations = ''
 
@@ -678,16 +1030,23 @@ class Feet(BioModSegment):
 
         BioModSegment.__init__(
             self,
-            label,
-            parent,
-            rt,
-            xyz,
-            translations,
-            rotations,
-            com,
-            mass,
-            inertia,
-            **options
+            label=label,
+            parent=parent,
+            rt=rt,
+            xyz=xyz,
+            translations=translations,
+            rotations=rotations,
+            com=com,
+            mass=mass,
+            inertia=inertia,  # I can do this because the systems of coordinates are aligned.
+            rangesQ=rangesQ,
+            mesh=mesh,
+            meshfile=meshfile,
+            meshcolor=meshcolor,
+            meshscale=meshscale,
+            meshrt=meshrt,
+            meshxyz=meshxyz,
+            patch=patch
         )
 
     @staticmethod

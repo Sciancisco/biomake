@@ -1,7 +1,9 @@
+from _xxsubinterpreters import destroy
 from typing import Annotated, Literal, TypeVar
 import numpy.typing as npt
 
 import numpy as np
+import yaml
 import yeadon
 
 
@@ -13,6 +15,16 @@ Mat3x3 = Annotated[npt.NDArray[DType], Literal[3, 3]]
 
 
 O = np.zeros(3)
+
+
+def format_vec(vec):
+    return ("{} " * len(vec)).format(*vec)[:-1]  # fancy
+
+
+def format_mat(mat: Mat3x3, leading=""):
+    return f"{leading}{mat[0, 0]} {mat[0, 1]} {mat[0, 2]}\n" \
+           f"{leading}{mat[1, 0]} {mat[1, 1]} {mat[1, 2]}\n" \
+           f"{leading}{mat[2, 0]} {mat[2, 1]} {mat[2, 2]}"
 
 
 class BioModSegment:
@@ -58,7 +70,7 @@ class BioModSegment:
     def __str__(self):
         mod = f"segment {self.label}\n"
         mod += f"\tparent {self.parent}\n"
-        mod += f"\trt {BioModSegment.format_vec(self.rt)} xyz {BioModSegment.format_vec(self.xyz)}\n"
+        mod += f"\trt {format_vec(self.rt)} xyz {format_vec(self.xyz)}\n"
         if self.translations:
             self.translations += f"\ttranslations {self.translations}\n"
         if self.rotations:
@@ -66,43 +78,33 @@ class BioModSegment:
         if self.rangesQ:
             mod += f"\trangesQ\n"
             for r in self.rangesQ:
-                mod += f"\t\t{BioModSegment.format_vec(r)}\n"
-        mod += f"\tcom {BioModSegment.format_vec(self.com)}\n"
+                mod += f"\t\t{format_vec(r)}\n"
+        mod += f"\tcom {format_vec(self.com)}\n"
         mod += f"\tmass {self.mass}\n"
-        mod += f"\tinertia\n" + BioModSegment.format_mat(self.inertia, leading="\t\t") + "\n"
+        mod += f"\tinertia\n" + format_mat(self.inertia, leading="\t\t") + "\n"
         if self.meshfile:
             mod += f"\tmeshfile {self.meshfile}\n"
         elif self.mesh:
             for m in self.mesh:
-                mod += f"\tmesh {BioModSegment.format_vec(m)}\n"
+                mod += f"\tmesh {format_vec(m)}\n"
         if self.meshcolor:
-            mod += f"\tmeshcolor {BioModSegment.format_vec(self.meshcolor)}\n"
+            mod += f"\tmeshcolor {format_vec(self.meshcolor)}\n"
         if self.meshscale:
-            mod += f"\tmeshscale {BioModSegment.format_vec(self.meshscale)}\n"
+            mod += f"\tmeshscale {format_vec(self.meshscale)}\n"
         if self.meshrt and self.meshxyz:
-            mod += f"\tmeshrt {BioModSegment.format_vec(self.meshscale)} xyz {BioModSegment.format_vec(self.meshxyz)}\n"
+            mod += f"\tmeshrt {format_vec(self.meshscale)} xyz {format_vec(self.meshxyz)}\n"
         if self.patch:
             for p in self.patch:
-                mod += f"\tpatch {BioModSegment.format_vec(p)}\n"
+                mod += f"\tpatch {format_vec(p)}\n"
         mod += "endsegment"
 
         return mod
-
-    @staticmethod
-    def format_vec(vec):
-        return ("{} " * len(vec)).format(*vec)[:-1]  # fancy
-
-    @staticmethod
-    def format_mat(mat: Mat3x3, leading=""):
-        return f"{leading}{mat[0, 0]} {mat[0, 1]} {mat[0, 2]}\n" \
-               f"{leading}{mat[1, 0]} {mat[1, 1]} {mat[1, 2]}\n" \
-               f"{leading}{mat[2, 0]} {mat[2, 1]} {mat[2, 2]}"
 
 
 class Pelvis(BioModSegment):
 
     def __init__(self, human: yeadon.Human, translations: str = '', rotations: str ='', **options):
-        label = 'Pelvis'
+        label = Pelvis.__name__
         parent = 'ROOT'
         rt = O
         xyz = Pelvis.get_origin(human)
@@ -132,8 +134,8 @@ class Pelvis(BioModSegment):
 class Thorax(BioModSegment):
 
     def __init__(self, human: yeadon.Human, rotations: str = '', **options):
-        label = 'Thorax'
-        parent = 'Pelvis'
+        label = Thorax.__name__
+        parent = Pelvis.__name__
         rt = O
         xyz = Thorax.get_origin(human) - Pelvis.get_origin(human)
         translations = ''
@@ -164,8 +166,8 @@ class Thorax(BioModSegment):
 class Head(BioModSegment):
 
     def __init__(self, human: yeadon.Human, rotations: str = '', **options):
-        label = 'Head'
-        parent = 'Thorax'
+        label = Head.__name__
+        parent = Thorax.__name__
         rt = O
         xyz = Head.get_origin(human) - Thorax.get_origin(human)
         translations = ''
@@ -200,8 +202,8 @@ class Head(BioModSegment):
 class LeftUpperArm(BioModSegment):
 
     def __init__(self, human: yeadon.Human, rotations: str = '', **options):
-        label = 'LeftUpperArm'
-        parent = 'Thorax'
+        label = LeftUpperArm.__name__
+        parent = Thorax.__name__
         rt = O
         xyz = LeftUpperArm.get_origin(human) - Thorax.get_origin(human)
         translations = ''
@@ -233,8 +235,8 @@ class LeftUpperArm(BioModSegment):
 class LeftForearm(BioModSegment):
 
     def __init__(self, human: yeadon.Human, rotations: str = '', **options):
-        label = 'LeftForearm'
-        parent = 'LeftUpperArm'
+        label = LeftForearm.__name__
+        parent = LeftUpperArm.__name__
         rt = O
         xyz = LeftForearm.get_origin(human) - LeftUpperArm.get_origin(human)
         translations = ''
@@ -265,8 +267,8 @@ class LeftForearm(BioModSegment):
 class LeftHand(BioModSegment):
 
     def __init__(self, human: yeadon.Human, rotations: str = '', **options):
-        label = 'LeftHand'
-        parent = 'LeftForearm'
+        label = LeftHand.__name__
+        parent = LeftForearm.__name__
         rt = O
         xyz = LeftHand.get_origin(human) - LeftForearm.get_origin(human)
         translations = ''
@@ -301,8 +303,8 @@ class LeftHand(BioModSegment):
 class RightUpperArm(BioModSegment):
 
     def __init__(self, human: yeadon.Human, rotations: str = '', **options):
-        label = 'RightUpperArm'
-        parent = 'Thorax'
+        label = RightUpperArm.__name__
+        parent = Thorax.__name__
         rt = O
         xyz = RightUpperArm.get_origin(human) - Thorax.get_origin(human)
         translations = ''
@@ -332,8 +334,8 @@ class RightUpperArm(BioModSegment):
 class RightForearm(BioModSegment):
 
     def __init__(self, human: yeadon.Human, rotations: str = '', **options):
-        label = 'RightForearm'
-        parent = 'RightUpperArm'
+        label = RightForearm.__name__
+        parent = RightUpperArm.__name__
         rt = O
         xyz = RightForearm.get_origin(human) - RightUpperArm.get_origin(human)
         translations = ''
@@ -364,8 +366,8 @@ class RightForearm(BioModSegment):
 class RightHand(BioModSegment):
 
     def __init__(self, human: yeadon.Human, rotations: str = '', **options):
-        label = 'RightHand'
-        parent = 'RightForearm'
+        label = RightHand.__name__
+        parent = RightForearm.__name__
         rt = O
         xyz = RightHand.get_origin(human) - RightForearm.get_origin(human)
         translations = ''
@@ -400,8 +402,8 @@ class RightHand(BioModSegment):
 class LeftThigh(BioModSegment):
 
     def __init__(self, human: yeadon.Human, rotations: str = '', **options):
-        label = 'LeftTigh'
-        parent = 'Pelvis'
+        label = LeftThigh.__name__
+        parent = Pelvis.__name__
         rt = O
         xyz = LeftThigh.get_origin(human) - Pelvis.get_origin(human)
         translations = ''
@@ -431,8 +433,8 @@ class LeftThigh(BioModSegment):
 class LeftShank(BioModSegment):
 
     def __init__(self, human: yeadon.Human, rotations: str = '', **options):
-        label = 'LeftShank'
-        parent = 'LeftTigh'
+        label = LeftShank.__name__
+        parent = LeftThigh.__name__
         rt = O
         xyz = LeftShank.get_origin(human) - LeftThigh.get_origin(human)
         translations = ''
@@ -463,8 +465,8 @@ class LeftShank(BioModSegment):
 class LeftFoot(BioModSegment):
 
     def __init__(self, human: yeadon.Human, rotations: str = '', **options):
-        label = 'LeftFoot'
-        parent = 'LeftShank'
+        label = LeftFoot.__name__
+        parent = LeftShank.__name__
         rt = O
         xyz = LeftFoot.get_origin(human) - LeftShank.get_origin(human)
         translations = ''
@@ -499,8 +501,8 @@ class LeftFoot(BioModSegment):
 class RightThigh(BioModSegment):
 
     def __init__(self, human: yeadon.Human, rotations: str = 'xy', **options):
-        label = 'RightTigh'
-        parent = 'Pelvis'
+        label = RightThigh.__name__
+        parent = Pelvis.__name__
         rt = O
         xyz = RightThigh.get_origin(human) - Pelvis.get_origin(human)
         translations = ''
@@ -530,8 +532,8 @@ class RightThigh(BioModSegment):
 class RightShank(BioModSegment):
 
     def __init__(self, human: yeadon.Human, rotations: str = '', **options):
-        label = 'RightShank'
-        parent = 'RightTigh'
+        label = RightShank.__name__
+        parent = RightThigh.__name__
         rt = O
         xyz = RightShank.get_origin(human) - RightThigh.get_origin(human)
         translations = ''
@@ -562,8 +564,8 @@ class RightShank(BioModSegment):
 class RightFoot(BioModSegment):
 
     def __init__(self, human: yeadon.Human, rotations: str = '', **options):
-        label = 'RightFoot'
-        parent = 'RightShank'
+        label = RightFoot.__name__
+        parent = RightShank.__name__
         rt = O
         xyz = RightFoot.get_origin(human) - RightShank.get_origin(human)
         translations = ''
@@ -599,8 +601,8 @@ class Thighs(BioModSegment):
     """The tighs of a human if they must remain together."""
 
     def __init__(self, human: yeadon.Human, rotations: str = '', **options):
-        label = 'Thighs'
-        parent = 'Pelvis'
+        label = Thighs.__name__
+        parent = Pelvis.__name__
         rt = O
         xyz = Thighs.get_origin(human) - Pelvis.get_origin(human)
         translations = ''
@@ -632,8 +634,8 @@ class Shanks(BioModSegment):
     """The shanks and feet of a human if they must remain together."""
 
     def __init__(self, human: yeadon.Human, rotations: str = '', **options):
-        label = 'Shanks'
-        parent = 'Thighs'
+        label = Shanks.__name__
+        parent = Thighs.__name__
         rt = O
         xyz = Shanks.get_origin(human) - Thighs.get_origin(human)
         translations = ''
@@ -665,8 +667,8 @@ class Feet(BioModSegment):
     """The shanks and feet of a human if they must remain together."""
 
     def __init__(self, human: yeadon.Human, rotations: str = '', **options):
-        label = 'Feet'
-        parent = 'Shanks'
+        label = Feet.__name__
+        parent = Shanks.__name__
         rt = O
         xyz = Feet.get_origin(human) - Shanks.get_origin(human)
         translations = ''
@@ -703,25 +705,28 @@ class Feet(BioModSegment):
 
 class BioModHuman:
 
-    def __init__(self, human: yeadon.Human):
-        self.head = Head(human)
-        self.thorax = Thorax(human)
-        self.pelvis = Pelvis(human)
-        self.right_upper_arm = RightUpperArm(human)
-        self.right_forearm = RightForearm(human)
-        self.right_hand = RightHand(human)
-        self.left_upper_arm = LeftUpperArm(human)
-        self.left_forearm = LeftForearm(human)
-        self.left_hand = LeftHand(human)
-        self.right_thigh = RightThigh(human)
-        self.right_shank = RightShank(human)
-        self.right_foot = RightFoot(human)
-        self.left_thigh = LeftThigh(human)
-        self.left_shank = LeftShank(human)
-        self.left_foot = LeftFoot(human)
+    def __init__(self, human: yeadon.Human, gravity: Vec3 = None, **options):
+        self.gravity = gravity
+        self.head = Head(human, **options[Head.__name__] if Head.__name__ in options else {})
+        self.thorax = Thorax(human, **options[Thorax.__name__] if Thorax.__name__ in options else {})
+        self.pelvis = Pelvis(human, **options[Pelvis.__name__] if Pelvis.__name__ in options else {})
+        self.right_upper_arm = RightUpperArm(human, **options[RightUpperArm.__name__] if RightUpperArm.__name__ in options else {})
+        self.right_forearm = RightForearm(human, **options[RightForearm.__name__] if RightForearm.__name__ in options else {})
+        self.right_hand = RightHand(human, **options[RightHand.__name__] if RightHand.__name__ in options else {})
+        self.left_upper_arm = LeftUpperArm(human, **options[LeftUpperArm.__name__] if LeftUpperArm.__name__ in options else {})
+        self.left_forearm = LeftForearm(human, **options[LeftForearm.__name__] if LeftForearm.__name__ in options else {})
+        self.left_hand = LeftHand(human, **options[LeftHand.__name__] if LeftHand.__name__ in options else {})
+        self.right_thigh = RightThigh(human, **options[RightThigh.__name__] if RightThigh.__name__ in options else {})
+        self.right_shank = RightShank(human, **options[RightShank.__name__] if RightShank.__name__ in options else {})
+        self.right_foot = RightFoot(human, **options[RightFoot.__name__] if RightFoot.__name__ in options else {})
+        self.left_thigh = LeftThigh(human, **options[LeftThigh.__name__] if LeftThigh.__name__ in options else {})
+        self.left_shank = LeftShank(human, **options[LeftShank.__name__] if LeftShank.__name__ in options else {})
+        self.left_foot = LeftFoot(human, **options[LeftFoot.__name__] if LeftFoot.__name__ in options else {})
 
     def __str__(self):
         biomod = "version 4\n\nroot_actuated 0\nexternal_forces 0\n\n"
+        if self.gravity:
+            biomod += f"gravity {format_vec(self.gravity)}\n\n"
         biomod += f"{self.pelvis}\n\n"
         biomod += f"{self.thorax}\n\n"
         biomod += f"{self.head}\n\n"
@@ -743,23 +748,25 @@ class BioModHuman:
 
 class BioModHumanFusedLegs:
 
-    def __init__(self, human: yeadon.Human):
-        self.head = Head(human)
-        self.thorax = Thorax(human)
-        self.pelvis = Pelvis(human)
-        self.right_upper_arm = RightUpperArm(human)
-        self.right_forearm = RightForearm(human)
-        self.right_hand = RightHand(human)
-        self.left_upper_arm = LeftUpperArm(human)
-        self.left_forearm = LeftForearm(human)
-        self.left_hand = LeftHand(human)
-        self.thighs = Thighs(human)
-        self.shanks = Shanks(human)
-        self.feet = Feet(human)
-
+    def __init__(self, human: yeadon.Human, gravity: Vec3 = None, **options):
+        self.gravity = gravity
+        self.head = Head(human, **options[Head.__name__] if Head.__name__ in options else {})
+        self.thorax = Thorax(human, **options[Thorax.__name__] if Thorax.__name__ in options else {})
+        self.pelvis = Pelvis(human, **options[Pelvis.__name__] if Pelvis.__name__ in options else {})
+        self.right_upper_arm = RightUpperArm(human, **options[RightUpperArm.__name__] if RightUpperArm.__name__ in options else {})
+        self.right_forearm = RightForearm(human, **options[RightForearm.__name__] if RightForearm.__name__ in options else {})
+        self.right_hand = RightHand(human, **options[RightHand.__name__] if RightHand.__name__ in options else {})
+        self.left_upper_arm = LeftUpperArm(human, **options[LeftUpperArm.__name__] if LeftUpperArm.__name__ in options else {})
+        self.left_forearm = LeftForearm(human, **options[LeftForearm.__name__] if LeftForearm.__name__ in options else {})
+        self.left_hand = LeftHand(human, **options[LeftHand.__name__] if LeftHand.__name__ in options else {})
+        self.thighs = Thighs(human, **options[Thighs.__name__] if Thighs.__name__ in options else {})
+        self.shanks = Shanks(human, **options[Shanks.__name__] if Shanks.__name__ in options else {})
+        self.feet = Feet(human, **options[Feet.__name__] if Feet.__name__ in options else {})
 
     def __str__(self):
         biomod = "version 4\n\nroot_actuated 0\nexternal_forces 0\n\n"
+        if self.gravity:
+            biomod += f"gravity {format_vec(self.gravity)}\n\n"
         biomod += f"{self.pelvis}\n\n"
         biomod += f"{self.thorax}\n\n"
         biomod += f"{self.head}\n\n"
@@ -776,9 +783,46 @@ class BioModHumanFusedLegs:
         return biomod
 
 
+def parse_biomod_options(filename):
+    Human = BioModHuman
+    human_options = {}
+    segments_options = {}
+
+    if not filename:
+        return Human, human_options, segments_options
+
+    with open(filename) as f:
+        biomod_options = yaml.safe_load(f.read())
+
+    if 'Human' in biomod_options:
+        human_options = biomod_options['Human']
+        del biomod_options['Human']
+        if 'fused' in human_options:
+            if human_options['fused']:
+                Human = BioModHumanFusedLegs
+            del human_options['fused']
+        del biomod_options['Human']
+
+    segments_options = biomod_options
+
+    return Human, human_options, segments_options
+
+
 if __name__ == '__main__':
-    import sys
-    measurements = sys.argv[1]
-    human = yeadon.Human(measurements)
-    biohuman = BioModHumanFusedLegs(human)
+    import argparse
+    parser = argparse.ArgumentParser(description="Convert yeadon human model to bioMod.")
+    parser.add_argument("--meas", required=True, nargs=1, dest="meas", help="measurement file of the human")
+    parser.add_argument("--yeadonCFG", nargs=1, dest="yeadonCFG", help="configuration file of the human")
+    parser.add_argument("--bioModOptions", nargs=1, dest="bioModOptions", help="option file for the bioMod")
+    args = parser.parse_args()
+
+    meas = args.meas[0]
+    yeadonCFG = args.yeadonCFG[0] if args.yeadonCFG else None
+    bioModOptions = args.bioModOptions[0] if args.bioModOptions else None
+
+    human = yeadon.Human(meas, yeadonCFG)
+    BioHuman, human_options, segments_options = parse_biomod_options(bioModOptions)
+
+    biohuman = BioHuman(human, **human_options, **segments_options)
+
     print(biohuman)

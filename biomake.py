@@ -346,8 +346,11 @@ class LeftForearm(BioModSegment):
         xyz = LeftForearm.get_origin(human) - LeftUpperArm.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia_global = human.combine_inertia(('a2', 'a3'))
-        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - LeftForearm.get_origin(human)
+        # using Segment to have rel_inertia
+        segment = yeadon.segment.Segment('', O.reshape(3, 1), np.eye(3), human.A2.solids[:2], O, False)
+        mass = segment.mass
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
+        inertia = segment.rel_inertia
 
         BioModSegment.__init__(
             self,
@@ -359,7 +362,7 @@ class LeftForearm(BioModSegment):
             rotations=rotations,
             com=com,
             mass=mass,
-            inertia=inertia_global,  # TODO: I cannot do this because the systems of coordinates aren't aligned.
+            inertia=inertia,
             rangesQ=rangesQ,
             mesh=mesh,
             meshfile=meshfile,
@@ -397,8 +400,11 @@ class LeftHand(BioModSegment):
         xyz = LeftHand.get_origin(human) - LeftForearm.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia_global = human.combine_inertia(('a4', 'a5', 'a6'))
-        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - LeftHand.get_origin(human)
+        # using Segment to have rel_inertia
+        segment = yeadon.segment.Segment('', O.reshape(3, 1), np.eye(3), human.A2.solids[2:], O, False)
+        mass = segment.mass
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
+        inertia = segment.rel_inertia
 
         BioModSegment.__init__(
             self,
@@ -410,7 +416,7 @@ class LeftHand(BioModSegment):
             rotations=rotations,
             com=com,
             mass=mass,
-            inertia=inertia_global,  # TODO: I cannot do this because the systems of coordinates aren't aligned.
+            inertia=inertia,
             rangesQ=rangesQ,
             mesh=mesh,
             meshfile=meshfile,
@@ -502,8 +508,11 @@ class RightForearm(BioModSegment):
         xyz = RightForearm.get_origin(human) - RightUpperArm.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia_global = human.combine_inertia(('b2', 'b3'))
-        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - RightForearm.get_origin(human)
+        # using Segment to have rel_inertia
+        segment = yeadon.segment.Segment('', O.reshape(3, 1), np.eye(3), human.B2.solids[:2], O, False)
+        mass = segment.mass
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
+        inertia = segment.rel_inertia
 
         BioModSegment.__init__(
             self,
@@ -515,7 +524,7 @@ class RightForearm(BioModSegment):
             rotations=rotations,
             com=com,
             mass=mass,
-            inertia=inertia_global,  # TODO: I cannot do this because the systems of coordinates aren't aligned.
+            inertia=inertia,
             rangesQ=rangesQ,
             mesh=mesh,
             meshfile=meshfile,
@@ -553,8 +562,11 @@ class RightHand(BioModSegment):
         xyz = RightHand.get_origin(human) - RightForearm.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia_global = human.combine_inertia(('b4', 'b5', 'b6'))
-        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - RightHand.get_origin(human)
+        # using Segment to have rel_inertia
+        segment = yeadon.segment.Segment('', O.reshape(3, 1), np.eye(3), human.B2.solids[2:], O, False)
+        mass = segment.mass
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
+        inertia = segment.rel_inertia
 
         BioModSegment.__init__(
             self,
@@ -566,7 +578,7 @@ class RightHand(BioModSegment):
             rotations=rotations,
             com=com,
             mass=mass,
-            inertia=inertia_global,  # TODO: I cannot do this because the systems of coordinates aren't aligned.
+            inertia=inertia,
             rangesQ=rangesQ,
             mesh=mesh,
             meshfile=meshfile,
@@ -658,8 +670,11 @@ class LeftShank(BioModSegment):
         xyz = LeftShank.get_origin(human) - LeftThigh.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia_global = human.combine_inertia(('j3', 'j4'))
-        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - LeftShank.get_origin(human)
+        # using Segment to have rel_inertia
+        segment = yeadon.segment.Segment('', O.reshape(3, 1), np.eye(3), human.J2.solids[:2], O, False)
+        mass = segment.mass
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
+        inertia = segment.rel_inertia
 
         BioModSegment.__init__(
             self,
@@ -671,7 +686,7 @@ class LeftShank(BioModSegment):
             rotations=rotations,
             com=com,
             mass=mass,
-            inertia=inertia_global,  # TODO: I cannot do this because the systems of coordinates aren't aligned.
+            inertia=inertia,
             rangesQ=rangesQ,
             mesh=mesh,
             meshfile=meshfile,
@@ -709,8 +724,11 @@ class LeftFoot(BioModSegment):
         xyz = LeftFoot.get_origin(human) - LeftShank.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia_global = human.combine_inertia(('j5', 'j6', 'j7', 'j8'))
-        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - LeftFoot.get_origin(human)
+        # using Segment to have rel_inertia
+        segment = yeadon.segment.Segment('', O.reshape(3, 1), np.eye(3), human.J2.solids[2:], O, False)
+        mass = segment.mass
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
+        inertia = segment.rel_inertia
 
         BioModSegment.__init__(
             self,
@@ -722,7 +740,7 @@ class LeftFoot(BioModSegment):
             rotations=rotations,
             com=com,
             mass=mass,
-            inertia=inertia_global,  # TODO: I cannot do this because the systems of coordinates aren't aligned.
+            inertia=inertia,
             rangesQ=rangesQ,
             mesh=mesh,
             meshfile=meshfile,
@@ -814,9 +832,11 @@ class RightShank(BioModSegment):
         xyz = RightShank.get_origin(human) - RightThigh.get_origin(human)
         translations = ''
 
-        
-        mass, com_global, inertia_global = human.combine_inertia(('k3', 'k4'))
-        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - RightShank.get_origin(human)
+        # using Segment to have rel_inertia
+        segment = yeadon.segment.Segment('', O.reshape(3, 1), np.eye(3), human.K2.solids[:2], O, False)
+        mass = segment.mass
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
+        inertia = segment.rel_inertia
 
         BioModSegment.__init__(
             self,
@@ -828,7 +848,7 @@ class RightShank(BioModSegment):
             rotations=rotations,
             com=com,
             mass=mass,
-            inertia=inertia_global,  # TODO: I cannot do this because the systems of coordinates aren't aligned.
+            inertia=inertia,
             rangesQ=rangesQ,
             mesh=mesh,
             meshfile=meshfile,
@@ -866,8 +886,11 @@ class RightFoot(BioModSegment):
         xyz = RightFoot.get_origin(human) - RightShank.get_origin(human)
         translations = ''
 
-        mass, com_global, inertia_global = human.combine_inertia(('k5', 'k6', 'k7', 'k8'))
-        com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - RightFoot.get_origin(human)
+        # using Segment to have rel_inertia
+        segment = yeadon.segment.Segment('', O.reshape(3, 1), np.eye(3), human.K2.solids[2:], O, False)
+        mass = segment.mass
+        com = np.asarray(segment.rel_center_of_mass).reshape(3)
+        inertia = segment.rel_inertia
 
         BioModSegment.__init__(
             self,
@@ -879,7 +902,7 @@ class RightFoot(BioModSegment):
             rotations=rotations,
             com=com,
             mass=mass,
-            inertia=inertia_global,  # TODO: I cannot do this because the systems of coordinates aren't aligned.
+            inertia=inertia,
             rangesQ=rangesQ,
             mesh=mesh,
             meshfile=meshfile,

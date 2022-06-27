@@ -814,6 +814,7 @@ class RightShank(BioModSegment):
         xyz = RightShank.get_origin(human) - RightThigh.get_origin(human)
         translations = ''
 
+        
         mass, com_global, inertia_global = human.combine_inertia(('k3', 'k4'))
         com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - RightShank.get_origin(human)
 
@@ -1170,15 +1171,13 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description="Convert yeadon human model to bioMod.")
     parser.add_argument("--meas", required=True, nargs=1, dest="meas", help="measurement file of the human")
-    parser.add_argument("--yeadonCFG", nargs=1, dest="yeadonCFG", help="configuration file of the human")
     parser.add_argument("--bioModOptions", nargs=1, dest="bioModOptions", help="option file for the bioMod")
     args = parser.parse_args()
 
     meas = args.meas[0]
-    yeadonCFG = args.yeadonCFG[0] if args.yeadonCFG else None
     bioModOptions = args.bioModOptions[0] if args.bioModOptions else None
 
-    human = yeadon.Human(meas, yeadonCFG)
+    human = yeadon.Human(meas)
     BioHuman, human_options, segments_options = parse_biomod_options(bioModOptions)
 
     biohuman = BioHuman(human, **human_options, **segments_options)

@@ -107,12 +107,13 @@ class BioModSegment:
 
     def __str__(self):
         mod = f"segment {self.label}\n"
-        mod += f"\tparent {self.parent}\n"
-        mod += f"\trt {format_vec(self.rt)} xyz {format_vec(self.xyz)}\n"
+        if self.parent:
+            mod += f"\tparent {self.parent}\n"
         if self.translations:
             mod += f"\ttranslations {self.translations}\n"
         if self.rotations:
             mod += f"\trotations {self.rotations}\n"
+        mod += f"\trt {format_vec(self.rt)} xyz {format_vec(self.xyz)}\n"
         if self.rangesQ:
             mod += f"\trangesQ\n"
             for r in self.rangesQ:
@@ -165,7 +166,7 @@ class Pelvis(BioModSegment):
             markers: dict[dict] = {}
     ):
         label = Pelvis.__name__
-        parent = 'ROOT'
+        parent = None
         xyz = Pelvis.get_origin(human)
         com = O
         mass = human.P.mass

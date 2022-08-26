@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright Francisco Pascoa <francisco.pascoa@umontreal.ca>
+
 from typing import Annotated, Literal, TypeVar
 import numpy.typing as npt
 

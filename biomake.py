@@ -21,13 +21,14 @@ def format_vec(vec):
 
 
 def format_mat(mat: Mat3x3, leading=""):
-    return f"{leading}{mat[0, 0]} {mat[0, 1]} {mat[0, 2]}\n" \
-           f"{leading}{mat[1, 0]} {mat[1, 1]} {mat[1, 2]}\n" \
-           f"{leading}{mat[2, 0]} {mat[2, 1]} {mat[2, 2]}"
+    return (
+        f"{leading}{mat[0, 0]} {mat[0, 1]} {mat[0, 2]}\n"
+        f"{leading}{mat[1, 0]} {mat[1, 1]} {mat[1, 2]}\n"
+        f"{leading}{mat[2, 0]} {mat[2, 1]} {mat[2, 2]}"
+    )
 
 
 class BioModMarker:
-
     def __init__(self, label: str, parent: str, position: Vec3, technical: int, anatomical: int, axestoremove: str):
         self.label = label
         self.parent = parent
@@ -51,40 +52,43 @@ class BioModMarker:
         return mod
 
 
+# TODO: move to a @classmethod in BioModMarker
 def parse_markers(parent: str, markers_desc: dict[dict]):
     markers = []
     for label in markers_desc:
-        position = markers_desc[label]['position']
-        technical = markers_desc[label]['technical'] if 'technical' in markers_desc[label] else None
-        anatomical = markers_desc[label]['anatomical'] if 'anatomical' in markers_desc[label] else None
-        axestoremove = markers_desc[label]['axestoremove'] if 'axestoremove' in markers_desc[label] else None
+        position = markers_desc[label]["position"]
+        technical = markers_desc[label]["technical"] if "technical" in markers_desc[label] else None
+        anatomical = markers_desc[label]["anatomical"] if "anatomical" in markers_desc[label] else None
+        axestoremove = markers_desc[label]["axestoremove"] if "axestoremove" in markers_desc[label] else None
         markers.append(BioModMarker(label, parent, position, technical, anatomical, axestoremove))
 
     return markers
 
 
-class BioModSegment:
+# TODO: add BioModIMU and BioModContact
 
+
+class BioModSegment:
     def __init__(
-            self,
-            label: str,
-            parent: str,
-            rt: Vec3,
-            xyz: Vec3,
-            translations: str,
-            rotations: str,
-            com: Vec3,
-            mass: float,
-            inertia: Mat3x3,
-            rangesQ: list[Vec2],
-            mesh: list[Vec3],
-            meshfile: str,
-            meshcolor: Vec3,
-            meshscale: Vec3,
-            meshrt: Vec3,
-            meshxyz: Vec3,
-            patch: list[Vec3],
-            markers: list[BioModMarker]
+        self,
+        label: str,
+        parent: str,
+        rt: Vec3,
+        xyz: Vec3,
+        translations: str,
+        rotations: str,
+        com: Vec3,
+        mass: float,
+        inertia: Mat3x3,
+        rangesQ: list[Vec2],
+        mesh: list[Vec3],
+        meshfile: str,
+        meshcolor: Vec3,
+        meshscale: Vec3,
+        meshrt: Vec3,
+        meshxyz: Vec3,
+        patch: list[Vec3],
+        markers: list[BioModMarker],
     ):
         self.label = label
         self.parent = parent
@@ -141,30 +145,29 @@ class BioModSegment:
             mod += "\n\n"
             for i, m in enumerate(self.markers):
                 mod += str(m)
-                if i < len(self.markers)-1:
+                if i < len(self.markers) - 1:
                     mod += "\n\n"
 
         return mod
 
 
 class Pelvis(BioModSegment):
-
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            rt: Vec3 = O,
-            translations: str = '',
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        rt: Vec3 = O,
+        translations: str = "",
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or Pelvis.__name__
         parent = None
@@ -195,7 +198,7 @@ class Pelvis(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
@@ -205,30 +208,29 @@ class Pelvis(BioModSegment):
 
 
 class Thorax(BioModSegment):
-
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = Pelvis.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = Pelvis.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or Thorax.__name__
 
         xyz = Thorax.get_origin(human) - Pelvis.get_origin(human)
-        translations = ''
+        translations = ""
 
-        mass, com_global, inertia_global = human.combine_inertia(('T', 's3', 's4'))
+        mass, com_global, inertia_global = human.combine_inertia(("T", "s3", "s4"))
         com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - Thorax.get_origin(human)
 
         markers = parse_markers(label, markers)
@@ -252,7 +254,7 @@ class Thorax(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
@@ -262,30 +264,29 @@ class Thorax(BioModSegment):
 
 
 class Head(BioModSegment):
-
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = Thorax.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = Thorax.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or Head.__name__
 
         xyz = Head.get_origin(human) - Thorax.get_origin(human)
-        translations = ''
+        translations = ""
 
-        mass, com_global, inertia_global = human.combine_inertia(('s5', 's6', 's7'))
+        mass, com_global, inertia_global = human.combine_inertia(("s5", "s6", "s7"))
         com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - Head.get_origin(human)
 
         markers = parse_markers(label, markers)
@@ -309,7 +310,7 @@ class Head(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
@@ -323,28 +324,27 @@ class Head(BioModSegment):
 
 
 class LeftUpperArm(BioModSegment):
-
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = Thorax.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = Thorax.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or LeftUpperArm.__name__
 
         xyz = LeftUpperArm.get_origin(human) - Thorax.get_origin(human)
-        translations = ''
+        translations = ""
 
         com = np.asarray(human.A1.rel_center_of_mass).reshape(3)
         mass = human.A1.mass
@@ -371,7 +371,7 @@ class LeftUpperArm(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
@@ -381,31 +381,30 @@ class LeftUpperArm(BioModSegment):
 
 
 class LeftForearm(BioModSegment):
-
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = LeftUpperArm.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = LeftUpperArm.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or LeftForearm.__name__
 
         xyz = LeftForearm.get_origin(human) - LeftUpperArm.get_origin(human)
-        translations = ''
+        translations = ""
 
         # using Segment to have rel_inertia
-        segment = yeadon.segment.Segment('', O.reshape(3, 1), np.eye(3), human.A2.solids[:2], O, False)
+        segment = yeadon.segment.Segment("", O.reshape(3, 1), np.eye(3), human.A2.solids[:2], O, False)
         mass = segment.mass
         com = np.asarray(segment.rel_center_of_mass).reshape(3)
         inertia = segment.rel_inertia
@@ -431,7 +430,7 @@ class LeftForearm(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
@@ -441,31 +440,30 @@ class LeftForearm(BioModSegment):
 
 
 class LeftHand(BioModSegment):
-
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = LeftForearm.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = LeftForearm.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or LeftHand
 
         xyz = LeftHand.get_origin(human) - LeftForearm.get_origin(human)
-        translations = ''
+        translations = ""
 
         # using Segment to have rel_inertia
-        segment = yeadon.segment.Segment('', O.reshape(3, 1), np.eye(3), human.A2.solids[2:], O, False)
+        segment = yeadon.segment.Segment("", O.reshape(3, 1), np.eye(3), human.A2.solids[2:], O, False)
         mass = segment.mass
         com = np.asarray(segment.rel_center_of_mass).reshape(3)
         inertia = segment.rel_inertia
@@ -491,7 +489,7 @@ class LeftHand(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
@@ -505,28 +503,27 @@ class LeftHand(BioModSegment):
 
 
 class RightUpperArm(BioModSegment):
-
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = Thorax.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = Thorax.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or RightUpperArm.__name__
 
         xyz = RightUpperArm.get_origin(human) - Thorax.get_origin(human)
-        translations = ''
+        translations = ""
         com = np.asarray(human.B1.rel_center_of_mass).reshape(3)
         mass = human.B1.mass
         inertia = human.B1.rel_inertia
@@ -552,7 +549,7 @@ class RightUpperArm(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
@@ -562,31 +559,30 @@ class RightUpperArm(BioModSegment):
 
 
 class RightForearm(BioModSegment):
-
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = RightUpperArm.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = RightUpperArm.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or RightForearm.__name__
 
         xyz = RightForearm.get_origin(human) - RightUpperArm.get_origin(human)
-        translations = ''
+        translations = ""
 
         # using Segment to have rel_inertia
-        segment = yeadon.segment.Segment('', O.reshape(3, 1), np.eye(3), human.B2.solids[:2], O, False)
+        segment = yeadon.segment.Segment("", O.reshape(3, 1), np.eye(3), human.B2.solids[:2], O, False)
         mass = segment.mass
         com = np.asarray(segment.rel_center_of_mass).reshape(3)
         inertia = segment.rel_inertia
@@ -612,7 +608,7 @@ class RightForearm(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
@@ -622,31 +618,30 @@ class RightForearm(BioModSegment):
 
 
 class RightHand(BioModSegment):
-
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = RightForearm.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = RightForearm.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or RightHand.__name__
 
         xyz = RightHand.get_origin(human) - RightForearm.get_origin(human)
-        translations = ''
+        translations = ""
 
         # using Segment to have rel_inertia
-        segment = yeadon.segment.Segment('', O.reshape(3, 1), np.eye(3), human.B2.solids[2:], O, False)
+        segment = yeadon.segment.Segment("", O.reshape(3, 1), np.eye(3), human.B2.solids[2:], O, False)
         mass = segment.mass
         com = np.asarray(segment.rel_center_of_mass).reshape(3)
         inertia = segment.rel_inertia
@@ -672,7 +667,7 @@ class RightHand(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
@@ -686,28 +681,27 @@ class RightHand(BioModSegment):
 
 
 class LeftThigh(BioModSegment):
-
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = Pelvis.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = Pelvis.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or LeftThigh.__name__
 
         xyz = LeftThigh.get_origin(human) - Pelvis.get_origin(human)
-        translations = ''
+        translations = ""
         com = np.asarray(human.J1.rel_center_of_mass).reshape(3)
         mass = human.J1.mass
         inertia = human.J1.rel_inertia
@@ -733,7 +727,7 @@ class LeftThigh(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
@@ -743,31 +737,30 @@ class LeftThigh(BioModSegment):
 
 
 class LeftShank(BioModSegment):
-
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = LeftThigh.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = LeftThigh.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or LeftShank.__name__
 
         xyz = LeftShank.get_origin(human) - LeftThigh.get_origin(human)
-        translations = ''
+        translations = ""
 
         # using Segment to have rel_inertia
-        segment = yeadon.segment.Segment('', O.reshape(3, 1), np.eye(3), human.J2.solids[:2], O, False)
+        segment = yeadon.segment.Segment("", O.reshape(3, 1), np.eye(3), human.J2.solids[:2], O, False)
         mass = segment.mass
         com = np.asarray(segment.rel_center_of_mass).reshape(3)
         inertia = segment.rel_inertia
@@ -793,7 +786,7 @@ class LeftShank(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
@@ -803,31 +796,30 @@ class LeftShank(BioModSegment):
 
 
 class LeftFoot(BioModSegment):
-
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = LeftShank.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = LeftShank.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or LeftFoot.__name__
 
         xyz = LeftFoot.get_origin(human) - LeftShank.get_origin(human)
-        translations = ''
+        translations = ""
 
         # using Segment to have rel_inertia
-        segment = yeadon.segment.Segment('', O.reshape(3, 1), np.eye(3), human.J2.solids[2:], O, False)
+        segment = yeadon.segment.Segment("", O.reshape(3, 1), np.eye(3), human.J2.solids[2:], O, False)
         mass = segment.mass
         com = np.asarray(segment.rel_center_of_mass).reshape(3)
         inertia = segment.rel_inertia
@@ -853,7 +845,7 @@ class LeftFoot(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
@@ -867,29 +859,27 @@ class LeftFoot(BioModSegment):
 
 
 class RightThigh(BioModSegment):
-
-
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = Pelvis.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = Pelvis.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or RightThigh.__name__
 
         xyz = RightThigh.get_origin(human) - Pelvis.get_origin(human)
-        translations = ''
+        translations = ""
         com = np.asarray(human.K1.rel_center_of_mass).reshape(3)
         mass = human.K1.mass
         inertia = human.K1.rel_inertia
@@ -915,7 +905,7 @@ class RightThigh(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
@@ -925,31 +915,30 @@ class RightThigh(BioModSegment):
 
 
 class RightShank(BioModSegment):
-
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = RightThigh.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = RightThigh.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or RightShank.__name__
 
         xyz = RightShank.get_origin(human) - RightThigh.get_origin(human)
-        translations = ''
+        translations = ""
 
         # using Segment to have rel_inertia
-        segment = yeadon.segment.Segment('', O.reshape(3, 1), np.eye(3), human.K2.solids[:2], O, False)
+        segment = yeadon.segment.Segment("", O.reshape(3, 1), np.eye(3), human.K2.solids[:2], O, False)
         mass = segment.mass
         com = np.asarray(segment.rel_center_of_mass).reshape(3)
         inertia = segment.rel_inertia
@@ -975,7 +964,7 @@ class RightShank(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
@@ -985,31 +974,30 @@ class RightShank(BioModSegment):
 
 
 class RightFoot(BioModSegment):
-
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = RightShank.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = RightShank.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or RightFoot.__name__
 
         xyz = RightFoot.get_origin(human) - RightShank.get_origin(human)
-        translations = ''
+        translations = ""
 
         # using Segment to have rel_inertia
-        segment = yeadon.segment.Segment('', O.reshape(3, 1), np.eye(3), human.K2.solids[2:], O, False)
+        segment = yeadon.segment.Segment("", O.reshape(3, 1), np.eye(3), human.K2.solids[2:], O, False)
         mass = segment.mass
         com = np.asarray(segment.rel_center_of_mass).reshape(3)
         inertia = segment.rel_inertia
@@ -1035,7 +1023,7 @@ class RightFoot(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
@@ -1052,27 +1040,27 @@ class Thighs(BioModSegment):
     """The tighs of a human if they must remain together."""
 
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = Pelvis.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = Pelvis.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or Thighs.__name__
         xyz = Thighs.get_origin(human) - Pelvis.get_origin(human)
-        translations = ''
+        translations = ""
 
-        mass, com_global, inertia = human.combine_inertia(('J1', 'K1'))
+        mass, com_global, inertia = human.combine_inertia(("J1", "K1"))
         com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - Thighs.get_origin(human)
 
         markers = parse_markers(label, markers)
@@ -1096,7 +1084,7 @@ class Thighs(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
@@ -1109,27 +1097,27 @@ class Shanks(BioModSegment):
     """The shanks of a human if they must remain together."""
 
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = Thighs.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = Thighs.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or Shanks.__name__
         xyz = Shanks.get_origin(human) - Thighs.get_origin(human)
-        translations = ''
+        translations = ""
 
-        mass, com_global, inertia = human.combine_inertia(('j3', 'j4', 'k3', 'k4'))
+        mass, com_global, inertia = human.combine_inertia(("j3", "j4", "k3", "k4"))
         com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - Shanks.get_origin(human)
 
         markers = parse_markers(label, markers)
@@ -1153,41 +1141,41 @@ class Shanks(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the ShanksAndFeet in the global frame centered at Pelvis' COM."""
-        return np.asarray((human.J2.pos + human.K2.pos) / 2. - human.P.center_of_mass).reshape(3)
+        return np.asarray((human.J2.pos + human.K2.pos) / 2.0 - human.P.center_of_mass).reshape(3)
 
 
 class Feet(BioModSegment):
     """The shanks and feet of a human if they must remain together."""
 
     def __init__(
-            self,
-            human: yeadon.Human,
-            label: str = '',
-            parent: str = Shanks.__name__,
-            rt: Vec3 = O,
-            rotations: str = '',
-            rangesQ: list[Vec2] = None,
-            mesh: list[Vec3] = [(0, 0, 0)],
-            meshfile: str = None,
-            meshcolor: Vec3 = None,
-            meshscale: Vec3 = None,
-            meshrt: Vec3 = None,
-            meshxyz: Vec3 = None,
-            patch: list[Vec3] = None,
-            markers: dict[dict] = {}
+        self,
+        human: yeadon.Human,
+        label: str = "",
+        parent: str = Shanks.__name__,
+        rt: Vec3 = O,
+        rotations: str = "",
+        rangesQ: list[Vec2] = None,
+        mesh: list[Vec3] = [(0, 0, 0)],
+        meshfile: str = None,
+        meshcolor: Vec3 = None,
+        meshscale: Vec3 = None,
+        meshrt: Vec3 = None,
+        meshxyz: Vec3 = None,
+        patch: list[Vec3] = None,
+        markers: dict[dict] = {},
     ):
         label = label or Feet.__name__
 
         xyz = Feet.get_origin(human) - Shanks.get_origin(human)
-        translations = ''
+        translations = ""
 
-        mass, com_global, inertia = human.combine_inertia(('j5', 'j6', 'j7', 'j8', 'k5', 'k6', 'k7', 'k8'))
+        mass, com_global, inertia = human.combine_inertia(("j5", "j6", "j7", "j8", "k5", "k6", "k7", "k8"))
         com = np.asarray(com_global - human.P.center_of_mass).reshape(3) - Feet.get_origin(human)
 
         markers = parse_markers(label, markers)
@@ -1211,41 +1199,100 @@ class Feet(BioModSegment):
             meshrt=meshrt,
             meshxyz=meshxyz,
             patch=patch,
-            markers=markers
+            markers=markers,
         )
 
     @staticmethod
     def get_origin(human: yeadon.Human) -> Vec3:
         """Get the origin of the Feet in the global frame centered at Pelvis' COM."""
-        length = ( human.J2.solids[0].height + human.J2.solids[1].height
-                  + human.K2.solids[0].height + human.K2.solids[1].height ) / 2.
+        length = (
+            human.J2.solids[0].height
+            + human.J2.solids[1].height
+            + human.K2.solids[0].height
+            + human.K2.solids[1].height
+        ) / 2.0
         dir_J = human.K2.end_pos - human.K2.pos
         dir_K = human.K2.end_pos - human.K2.pos
-        dir = (dir_J + dir_K) / 2.
+        dir = (dir_J + dir_K) / 2.0
         dir = dir / np.linalg.norm(dir)
-        pos = (human.J2.pos + human.K2.pos) / 2. + length * dir
+        pos = (human.J2.pos + human.K2.pos) / 2.0 + length * dir
         return np.asarray(pos - human.P.center_of_mass).reshape(3)
 
 
 class BioModHuman:
-
     def __init__(self, human: yeadon.Human, gravity: Vec3 = None, **segments_options):
         self.gravity = gravity
         self.pelvis = Pelvis(human, **segments_options[Pelvis.__name__] if Pelvis.__name__ in segments_options else {})
-        self.thorax = Thorax(human, parent=self.pelvis.label, **segments_options[Thorax.__name__] if Thorax.__name__ in segments_options else {})
-        self.head = Head(human, parent=self.thorax.label, **segments_options[Head.__name__] if Head.__name__ in segments_options else {})
-        self.right_upper_arm = RightUpperArm(human, parent=self.thorax.label, **segments_options[RightUpperArm.__name__] if RightUpperArm.__name__ in segments_options else {})
-        self.right_forearm = RightForearm(human, parent=self.right_upper_arm.label, **segments_options[RightForearm.__name__] if RightForearm.__name__ in segments_options else {})
-        self.right_hand = RightHand(human, parent=self.right_forearm.label, **segments_options[RightHand.__name__] if RightHand.__name__ in segments_options else {})
-        self.left_upper_arm = LeftUpperArm(human, parent=self.thorax.label, **segments_options[LeftUpperArm.__name__] if LeftUpperArm.__name__ in segments_options else {})
-        self.left_forearm = LeftForearm(human, parent=self.left_upper_arm.label, **segments_options[LeftForearm.__name__] if LeftForearm.__name__ in segments_options else {})
-        self.left_hand = LeftHand(human, parent=self.left_forearm.label, **segments_options[LeftHand.__name__] if LeftHand.__name__ in segments_options else {})
-        self.right_thigh = RightThigh(human, parent=self.pelvis.label, **segments_options[RightThigh.__name__] if RightThigh.__name__ in segments_options else {})
-        self.right_shank = RightShank(human, parent=self.right_thigh.label, **segments_options[RightShank.__name__] if RightShank.__name__ in segments_options else {})
-        self.right_foot = RightFoot(human, parent=self.right_shank.label, **segments_options[RightFoot.__name__] if RightFoot.__name__ in segments_options else {})
-        self.left_thigh = LeftThigh(human, parent=self.pelvis.label, **segments_options[LeftThigh.__name__] if LeftThigh.__name__ in segments_options else {})
-        self.left_shank = LeftShank(human, parent=self.left_thigh.label, **segments_options[LeftShank.__name__] if LeftShank.__name__ in segments_options else {})
-        self.left_foot = LeftFoot(human, parent=self.left_shank.label, **segments_options[LeftFoot.__name__] if LeftFoot.__name__ in segments_options else {})
+        self.thorax = Thorax(
+            human,
+            parent=self.pelvis.label,
+            **segments_options[Thorax.__name__] if Thorax.__name__ in segments_options else {},
+        )
+        self.head = Head(
+            human,
+            parent=self.thorax.label,
+            **segments_options[Head.__name__] if Head.__name__ in segments_options else {},
+        )
+        self.right_upper_arm = RightUpperArm(
+            human,
+            parent=self.thorax.label,
+            **segments_options[RightUpperArm.__name__] if RightUpperArm.__name__ in segments_options else {},
+        )
+        self.right_forearm = RightForearm(
+            human,
+            parent=self.right_upper_arm.label,
+            **segments_options[RightForearm.__name__] if RightForearm.__name__ in segments_options else {},
+        )
+        self.right_hand = RightHand(
+            human,
+            parent=self.right_forearm.label,
+            **segments_options[RightHand.__name__] if RightHand.__name__ in segments_options else {},
+        )
+        self.left_upper_arm = LeftUpperArm(
+            human,
+            parent=self.thorax.label,
+            **segments_options[LeftUpperArm.__name__] if LeftUpperArm.__name__ in segments_options else {},
+        )
+        self.left_forearm = LeftForearm(
+            human,
+            parent=self.left_upper_arm.label,
+            **segments_options[LeftForearm.__name__] if LeftForearm.__name__ in segments_options else {},
+        )
+        self.left_hand = LeftHand(
+            human,
+            parent=self.left_forearm.label,
+            **segments_options[LeftHand.__name__] if LeftHand.__name__ in segments_options else {},
+        )
+        self.right_thigh = RightThigh(
+            human,
+            parent=self.pelvis.label,
+            **segments_options[RightThigh.__name__] if RightThigh.__name__ in segments_options else {},
+        )
+        self.right_shank = RightShank(
+            human,
+            parent=self.right_thigh.label,
+            **segments_options[RightShank.__name__] if RightShank.__name__ in segments_options else {},
+        )
+        self.right_foot = RightFoot(
+            human,
+            parent=self.right_shank.label,
+            **segments_options[RightFoot.__name__] if RightFoot.__name__ in segments_options else {},
+        )
+        self.left_thigh = LeftThigh(
+            human,
+            parent=self.pelvis.label,
+            **segments_options[LeftThigh.__name__] if LeftThigh.__name__ in segments_options else {},
+        )
+        self.left_shank = LeftShank(
+            human,
+            parent=self.left_thigh.label,
+            **segments_options[LeftShank.__name__] if LeftShank.__name__ in segments_options else {},
+        )
+        self.left_foot = LeftFoot(
+            human,
+            parent=self.left_shank.label,
+            **segments_options[LeftFoot.__name__] if LeftFoot.__name__ in segments_options else {},
+        )
 
     def __str__(self):
         biomod = "version 4\n\nroot_actuated 0\nexternal_forces 0\n\n"
@@ -1271,21 +1318,64 @@ class BioModHuman:
 
 
 class BioModHumanFusedLegs:
-
     def __init__(self, human: yeadon.Human, gravity: Vec3 = None, **segments_options):
         self.gravity = gravity
         self.pelvis = Pelvis(human, **segments_options[Pelvis.__name__] if Pelvis.__name__ in segments_options else {})
-        self.thorax = Thorax(human, parent=self.pelvis.label, **segments_options[Thorax.__name__] if Thorax.__name__ in segments_options else {})
-        self.head = Head(human, parent=self.thorax.label, **segments_options[Head.__name__] if Head.__name__ in segments_options else {})
-        self.right_upper_arm = RightUpperArm(human, parent=self.thorax.label, **segments_options[RightUpperArm.__name__] if RightUpperArm.__name__ in segments_options else {})
-        self.right_forearm = RightForearm(human, parent=self.right_upper_arm.label, **segments_options[RightForearm.__name__] if RightForearm.__name__ in segments_options else {})
-        self.right_hand = RightHand(human, parent=self.right_forearm.label, **segments_options[RightHand.__name__] if RightHand.__name__ in segments_options else {})
-        self.left_upper_arm = LeftUpperArm(human, parent=self.thorax.label, **segments_options[LeftUpperArm.__name__] if LeftUpperArm.__name__ in segments_options else {})
-        self.left_forearm = LeftForearm(human, parent=self.left_upper_arm.label, **segments_options[LeftForearm.__name__] if LeftForearm.__name__ in segments_options else {})
-        self.left_hand = LeftHand(human, parent=self.left_forearm.label, **segments_options[LeftHand.__name__] if LeftHand.__name__ in segments_options else {})
-        self.thighs = Thighs(human, parent=self.pelvis.label, **segments_options[Thighs.__name__] if Thighs.__name__ in segments_options else {})
-        self.shanks = Shanks(human, parent=self.thighs.label, **segments_options[Shanks.__name__] if Shanks.__name__ in segments_options else {})
-        self.feet = Feet(human, parent=self.shanks.label, **segments_options[Feet.__name__] if Feet.__name__ in segments_options else {})
+        self.thorax = Thorax(
+            human,
+            parent=self.pelvis.label,
+            **segments_options[Thorax.__name__] if Thorax.__name__ in segments_options else {},
+        )
+        self.head = Head(
+            human,
+            parent=self.thorax.label,
+            **segments_options[Head.__name__] if Head.__name__ in segments_options else {},
+        )
+        self.right_upper_arm = RightUpperArm(
+            human,
+            parent=self.thorax.label,
+            **segments_options[RightUpperArm.__name__] if RightUpperArm.__name__ in segments_options else {},
+        )
+        self.right_forearm = RightForearm(
+            human,
+            parent=self.right_upper_arm.label,
+            **segments_options[RightForearm.__name__] if RightForearm.__name__ in segments_options else {},
+        )
+        self.right_hand = RightHand(
+            human,
+            parent=self.right_forearm.label,
+            **segments_options[RightHand.__name__] if RightHand.__name__ in segments_options else {},
+        )
+        self.left_upper_arm = LeftUpperArm(
+            human,
+            parent=self.thorax.label,
+            **segments_options[LeftUpperArm.__name__] if LeftUpperArm.__name__ in segments_options else {},
+        )
+        self.left_forearm = LeftForearm(
+            human,
+            parent=self.left_upper_arm.label,
+            **segments_options[LeftForearm.__name__] if LeftForearm.__name__ in segments_options else {},
+        )
+        self.left_hand = LeftHand(
+            human,
+            parent=self.left_forearm.label,
+            **segments_options[LeftHand.__name__] if LeftHand.__name__ in segments_options else {},
+        )
+        self.thighs = Thighs(
+            human,
+            parent=self.pelvis.label,
+            **segments_options[Thighs.__name__] if Thighs.__name__ in segments_options else {},
+        )
+        self.shanks = Shanks(
+            human,
+            parent=self.thighs.label,
+            **segments_options[Shanks.__name__] if Shanks.__name__ in segments_options else {},
+        )
+        self.feet = Feet(
+            human,
+            parent=self.shanks.label,
+            **segments_options[Feet.__name__] if Feet.__name__ in segments_options else {},
+        )
 
     def __str__(self):
         biomod = "version 4\n\nroot_actuated 0\nexternal_forces 0\n\n"
@@ -1318,13 +1408,13 @@ def parse_biomod_options(filename):
     with open(filename) as f:
         biomod_options = yaml.safe_load(f.read())
 
-    if 'Human' in biomod_options:
-        human_options = biomod_options['Human']
-        del biomod_options['Human']
-        if 'fused' in human_options:
-            if human_options['fused']:
+    if "Human" in biomod_options:
+        human_options = biomod_options["Human"]
+        del biomod_options["Human"]
+        if "fused" in human_options:
+            if human_options["fused"]:
                 Human = BioModHumanFusedLegs
-            del human_options['fused']
+            del human_options["fused"]
 
     segments_options = biomod_options
 
@@ -1332,8 +1422,9 @@ def parse_biomod_options(filename):
     return Human, human_options, segments_options
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description="Convert yeadon human model to bioMod.")
     parser.add_argument("meas", help="measurement file of the human")
     parser.add_argument("--bioModOptions", nargs=1, help="option file for the bioMod")
